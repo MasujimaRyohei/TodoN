@@ -1,34 +1,33 @@
-import type { Task } from '@todon/shared';
+import type { Task, TaskWithPeople } from '@todon/shared';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUserId } from '@/lib/auth/session';
+import { NotFoundError } from '@/lib/http';
+import { getServerAppScope } from '@/lib/scope-server';
+import { teamDisplayIcon } from '@/lib/scope-preferences';
 import { listTasks } from '@/server/tasks';
+import { listTeamTasks } from '@/server/team-tasks';
+import { getTeamForUser } from '@/server/teams';
 
-function TaskRow({ task }: { task: Task }) {
+function TaskRow({ task, showAssignee }: { task: Task | TaskWithPeople; showAssignee?: boolean }) {
+  const assignee = showAssignee && 'assignee' in task ? task.assignee : null;
+
   return (
     <li>
-      <Link
-        href={`/tasks/${task.id}`}
-        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-900/50 bg-slate-900/70 px-4 py-3 hover:border-emerald-500/70"
-      >
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-todon-ink">{task.title}</p>
-            <span className="rounded-full bg-emerald-900/50 px-2 py-0.5 text-[10px] uppercase text-emerald-200">
-              {task.status}
-            </span>
-          </div>
-          <p className="text-xs text-todon-ink-muted">
-            {task.importance}/{task.urgency} / {task.weight}
-            {task.category ? ` / ${task.category.name}` : ''}
-          </p>
+      <Link href={`/tasks/${task.id}`} className="todon-task-link">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-bold text-todon-ink">{task.title}</p>
+          <span className="rounded-full bg-todon-primary-soft px-2 py-0.5 text-[11px] font-bold uppercase text-todon-primary">
+            {task.status}
+          </span>
         </div>
-        {task.dueAt ? (
-          <p className="text-xs text-emerald-200">{new Date(task.dueAt).toLocaleString('ja-JP')}</p>
-        ) : (
-          <p className="text-xs text-todon-ink-muted">期限なし</p>
-        )}
+        <p className="text-xs text-todon-ink-muted">
+          重要度 {task.importance} / 緊急度 {task.urgency}
+          {task.category ? ` / ${task.category.name}` : ''}
+          {assignee?.name ? ` / 担当: ${assignee.name}` : ''}
+          {task.dueAt ? ` / 期限 ${new Date(task.dueAt).toLocaleString('ja-JP')}` : ''}
+        </p>
       </Link>
     </li>
   );
@@ -40,30 +39,48 @@ export default async function TasksPage() {
     redirect('/login');
   }
 
-  const tasks = await listTasks(userId, false);
+  const scope = await getServerAppScope();
+  const isTeam = scope.mode === 'team';
+
+  let title = '個人タスク';
+  let eyebrow = '個人';
+  let tasks: (Task | TaskWithPeople)[] = [];
+  let newTaskHref = '/tasks/new';
+
+  if (isTeam) {
+    try {
+      const team = await getTeamForUser(userId, scope.teamId);
+      tasks = await listTeamTasks(userId, scope.teamId, false);
+      title = `${team.name} のタスク`;
+      eyebrow = 'チーム';
+      newTaskHref = `/tasks/new?teamId=${scope.teamId}`;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        redirect('/tasks');
+      }
+      throw error;
+    }
+  } else {
+    tasks = await listTasks(userId, false);
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="todon-eyebrow">個人タスク（v1）</p>
-          <h1 className="todon-page-title">一覧</h1>
+          <p className="todon-eyebrow">{eyebrow}</p>
+          <h1 className="todon-page-title">{title}</h1>
         </div>
-        <Link
-          href="/tasks/new"
-          className="todon-btn-primary transition hover:bg-emerald-400"
-        >
+        <Link href={newTaskHref} className="todon-btn-primary">
           新規作成
         </Link>
       </div>
       {tasks.length === 0 ? (
-        <p className="todon-muted">
-          まだタスクがありません。上部のボタンから作成してください。
-        </p>
+        <p className="todon-muted">まだタスクがありません。上部のボタンから作成してください。</p>
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <TaskRow key={task.id} task={task} />
+            <TaskRow key={task.id} task={task} showAssignee={isTeam} />
           ))}
         </ul>
       )}

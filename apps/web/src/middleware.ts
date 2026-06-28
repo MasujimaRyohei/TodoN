@@ -42,7 +42,16 @@ export async function middleware(req: NextRequest) {
 
   try {
     await verifyUserToken(token);
-    return NextResponse.next();
+    const response = NextResponse.next();
+    const teamMatch = pathname.match(/^\/teams\/([^/]+)/);
+    if (teamMatch?.[1] && teamMatch[1] !== 'new') {
+      response.cookies.set('todon_scope', `team:${teamMatch[1]}`, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      });
+    }
+    return response;
   } catch {
     return NextResponse.redirect(new URL('/login', req.url));
   }

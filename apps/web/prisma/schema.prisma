@@ -41,6 +41,7 @@ model Team {
   members  TeamMember[]
   invites  TeamInvite[]
   tasks    Task[]
+  projects Project[]
   reviews  WeeklyReview[]
 }
 
@@ -196,6 +197,9 @@ model Project {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope       String   @default("personal")
+  teamId      String?
+  team        Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
   name        String
   description String?
   color       String?

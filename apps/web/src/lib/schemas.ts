@@ -141,6 +141,7 @@ export const createProjectSchema = z.object({
   name: z.string().min(1).max(64),
   description: z.string().max(500).optional().nullable(),
   color: z.string().max(32).optional().nullable(),
+  teamId: z.string().min(1).optional().nullable(),
 });
 
 export const createTemplateSchema = z.object({

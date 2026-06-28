@@ -7,10 +7,11 @@ import { useEffect, useRef, useState } from 'react';
 
 import {
   type AppScope,
+  persistAppScope,
   readAppScope,
+  scopedHomePath,
   scopeFromPathname,
   teamDisplayIcon,
-  writeAppScope,
 } from '@/lib/scope-preferences';
 
 const TEAM_ICON_PRESETS = ['🚀', '⚡', '🎯', '🌟', '💼', '🎨', '🔥', '🐣', '👋', '🌱'];
@@ -30,7 +31,7 @@ export function ScopeSwitcher() {
     const stored = readAppScope();
     const next = fromPath ?? stored ?? { mode: 'personal' };
     setScope(next);
-    writeAppScope(next);
+    persistAppScope(next);
   }, [pathname]);
 
   useEffect(() => {
@@ -75,11 +76,12 @@ export function ScopeSwitcher() {
 
   function selectPersonal() {
     const next: AppScope = { mode: 'personal' };
-    writeAppScope(next);
+    persistAppScope(next);
     setScope(next);
     setOpen(false);
     setTeamHover(false);
-    router.push('/dashboard');
+    router.push(scopedHomePath(pathname));
+    router.refresh();
   }
 
   function selectTeam(team: Team) {
@@ -89,11 +91,12 @@ export function ScopeSwitcher() {
       teamName: team.name,
       teamIcon: team.icon,
     };
-    writeAppScope(next);
+    persistAppScope(next);
     setScope(next);
     setOpen(false);
     setTeamHover(false);
-    router.push(`/teams/${team.id}`);
+    router.push(scopedHomePath(pathname));
+    router.refresh();
   }
 
   return (

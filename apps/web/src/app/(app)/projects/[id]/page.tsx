@@ -28,7 +28,14 @@ export default async function ProjectDetailPage({ params }: Props) {
           {project.description ? <p className="todon-muted">{project.description}</p> : null}
         </div>
 
-        <Link href={`/tasks/new?projectId=${project.id}`} className="todon-btn-primary inline-block text-sm">
+        <Link
+          href={
+            project.scope === 'team' && project.teamId
+              ? `/tasks/new?teamId=${project.teamId}&projectId=${project.id}`
+              : `/tasks/new?projectId=${project.id}`
+          }
+          className="todon-btn-primary inline-block text-sm"
+        >
           このプロジェクトにタスク追加
         </Link>
 

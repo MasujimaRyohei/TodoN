@@ -5,7 +5,11 @@ import { CapacitySelector } from '@/components/capacity-selector';
 import { DashboardTaskBoard } from '@/components/dashboard-task-panels';
 import { DashboardTodayHero } from '@/components/dashboard-today-hero';
 import { getCurrentUserId } from '@/lib/auth/session';
+import { getServerAppScope } from '@/lib/scope-server';
+import { teamDisplayIcon } from '@/lib/scope-preferences';
+import { NotFoundError } from '@/lib/http';
 import { buildDashboard } from '@/server/dashboard';
+import { getTeamForUser } from '@/server/teams';
 
 export default async function DashboardPage() {
   const userId = await getCurrentUserId();
@@ -14,34 +18,68 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const data = await buildDashboard(userId);
+  const scope = await getServerAppScope();
+
+  if (scope.mode === 'team') {
+    try {
+      await getTeamForUser(userId, scope.teamId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        redirect('/dashboard');
+      }
+      throw error;
+    }
+  }
+
+  const data = await buildDashboard(userId, scope);
+  const isTeam = data.scopeMode === 'team';
 
   const footerLinks = (
     <div className="flex flex-wrap gap-4 text-sm">
       <Link href="/reviews" className="todon-link">
         週次振り返り →
       </Link>
-      <Link href="/templates" className="todon-link">
-        テンプレート →
-      </Link>
-      <Link href="/gantt" className="todon-link">
-        ガント →
-      </Link>
+      {!isTeam ? (
+        <>
+          <Link href="/templates" className="todon-link">
+            テンプレート →
+          </Link>
+          <Link href="/gantt" className="todon-link">
+            ガント →
+          </Link>
+        </>
+      ) : null}
       <Link href="/archive" className="todon-link">
         アーカイブ →
       </Link>
+      {!isTeam ? null : (
+        <Link href={`/teams/${data.teamId}`} className="todon-link">
+          チーム設定 →
+        </Link>
+      )}
     </div>
   );
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="todon-eyebrow">今日のトドン</p>
+        <p className="todon-eyebrow">{isTeam ? 'チーム' : '今日のトドン'}</p>
         <h1 className="todon-page-title">
-          ダッシュボード
-          <span className="ml-2 text-2xl" aria-hidden>
-            ☀️
-          </span>
+          {isTeam ? (
+            <>
+              {data.teamName}
+              <span className="ml-2 text-2xl" aria-hidden>
+                {teamDisplayIcon({ name: data.teamName ?? 'T', icon: data.teamIcon })}
+              </span>
+            </>
+          ) : (
+            <>
+              ダッシュボード
+              <span className="ml-2 text-2xl" aria-hidden>
+                ☀️
+              </span>
+            </>
+          )}
         </h1>
       </div>
 
@@ -53,7 +91,7 @@ export default async function DashboardPage() {
         progress={data.todayProgress}
       />
 
-      <CapacitySelector initial={data.capacity} />
+      {!isTeam ? <CapacitySelector initial={data.capacity} /> : null}
 
       <section className="todon-section p-4">
         <p className="todon-section-label">ひとこと（ルールベース）</p>
@@ -61,6 +99,7 @@ export default async function DashboardPage() {
       </section>
 
       <DashboardTaskBoard
+        scopeMode={data.scopeMode}
         data={{
           myTeamTasks: data.myTeamTasks,
           todayFlexible: data.todayFlexible,

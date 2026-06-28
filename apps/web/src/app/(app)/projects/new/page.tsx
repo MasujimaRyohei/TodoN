@@ -1,53 +1,37 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { NewProjectForm } from '@/components/new-project-form';
+import { getCurrentUserId } from '@/lib/auth/session';
+import { NotFoundError } from '@/lib/http';
+import { getServerAppScope } from '@/lib/scope-server';
+import { getTeamForUser } from '@/server/teams';
 
-export default function NewProjectPage() {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
+type Props = {
+  searchParams: Promise<{ teamId?: string }>;
+};
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+export default async function NewProjectPage({ searchParams }: Props) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    redirect('/login');
+  }
+
+  const params = await searchParams;
+  const scope = await getServerAppScope();
+  const teamId = params.teamId ?? (scope.mode === 'team' ? scope.teamId : null);
+
+  let teamName: string | null = null;
+  if (teamId) {
     try {
-      const res = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name, description }),
-      });
-      if (!res.ok) {
-        throw new Error('作成に失敗');
+      const team = await getTeamForUser(userId, teamId);
+      teamName = team.name;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        redirect('/projects/new');
       }
-      const project = await res.json();
-      router.push(`/projects/${project.id}`);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <h1 className="todon-page-title">プロジェクト作成</h1>
-      <form onSubmit={(e) => void onSubmit(e)} className="todon-card space-y-4 p-6">
-        <input className="todon-input" placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} required />
-        <textarea
-          className="todon-input min-h-[100px]"
-          placeholder="説明（任意）"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button type="submit" className="todon-btn-primary" disabled={loading}>
-          作成
-        </button>
-      </form>
-      <Link href="/projects" className="todon-link text-sm">
-        一覧へ
-      </Link>
-    </div>
-  );
+  return <NewProjectForm teamId={teamId} teamName={teamName} />;
 }

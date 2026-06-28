@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { TEAM_ICON_PRESETS } from '@/components/scope-switcher';
-import { teamDisplayIcon, writeAppScope } from '@/lib/scope-preferences';
+import { persistAppScope, teamDisplayIcon } from '@/lib/scope-preferences';
 
 type Props = {
   team: Team;
@@ -93,7 +93,7 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
 
       const updated = (await res.json()) as Team;
       setTeamIcon(updated.icon ?? '');
-      writeAppScope({
+      persistAppScope({
         mode: 'team',
         teamId: team.id,
         teamName: team.name,

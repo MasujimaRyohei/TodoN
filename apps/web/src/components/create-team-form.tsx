@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { TEAM_ICON_PRESETS } from '@/components/scope-switcher';
-import { writeAppScope } from '@/lib/scope-preferences';
+import { persistAppScope } from '@/lib/scope-preferences';
 
 export function CreateTeamForm() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function CreateTeamForm() {
       }
 
       const team = (await res.json()) as { id: string; name: string; icon?: string | null };
-      writeAppScope({ mode: 'team', teamId: team.id, teamName: team.name, teamIcon: team.icon });
+      persistAppScope({ mode: 'team', teamId: team.id, teamName: team.name, teamIcon: team.icon });
       router.push(`/teams/${team.id}`);
       router.refresh();
     } catch (e) {

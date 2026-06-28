@@ -155,12 +155,15 @@ function HideEmptyToggle({
 }
 
 export function DashboardTaskBoard({
+  scopeMode = 'personal',
   data,
   footer,
 }: {
+  scopeMode?: 'personal' | 'team';
   data: PanelData;
   footer?: ReactNode;
 }) {
+  const isTeam = scopeMode === 'team';
   const [hideEmpty, setHideEmpty] = useState(true);
 
   useEffect(() => {
@@ -201,12 +204,15 @@ export function DashboardTaskBoard({
   return (
     <div className="space-y-4">
       {show(data.myTeamTasks) ? (
-        <Section title="担当のチームタスク" description="自分が担当している未完了タスク">
+        <Section
+          title={isTeam ? '自分の担当タスク' : '担当のチームタスク'}
+          description={isTeam ? 'このチームで自分が担当している未完了タスク' : '自分が担当している未完了タスク'}
+        >
           <TeamTaskList tasks={data.myTeamTasks} />
         </Section>
       ) : null}
 
-      {show(data.todayFlexible) ? (
+      {!isTeam && show(data.todayFlexible) ? (
         <Section title="だいたいリピート（今日）" description="周期とキャパシティから算出">
           <FlexibleList tasks={data.todayFlexible} />
         </Section>

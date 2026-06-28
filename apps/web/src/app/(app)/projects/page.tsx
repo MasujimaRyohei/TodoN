@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUserId } from '@/lib/auth/session';
+import { NotFoundError } from '@/lib/http';
+import { getServerAppScope } from '@/lib/scope-server';
+import { teamDisplayIcon } from '@/lib/scope-preferences';
 import { listProjects } from '@/server/projects';
+import { getTeamForUser } from '@/server/teams';
 
 export default async function ProjectsPage() {
   const userId = await getCurrentUserId();
@@ -10,22 +14,55 @@ export default async function ProjectsPage() {
     redirect('/login');
   }
 
-  const projects = await listProjects(userId);
+  const scope = await getServerAppScope();
+  const isTeam = scope.mode === 'team';
+
+  let team = null;
+  if (isTeam) {
+    try {
+      team = await getTeamForUser(userId, scope.teamId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        redirect('/projects');
+      }
+      throw error;
+    }
+  }
+
+  const projects = await listProjects(userId, scope);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="todon-eyebrow">v3</p>
-          <h1 className="todon-page-title">プロジェクト 📁</h1>
+          <p className="todon-eyebrow">{isTeam ? 'チーム' : '個人'}</p>
+          <h1 className="todon-page-title">
+            {isTeam ? (
+              <>
+                {team?.name} のプロジェクト
+                <span className="ml-2 text-2xl" aria-hidden>
+                  {teamDisplayIcon({ name: team?.name ?? 'T', icon: team?.icon })}
+                </span>
+              </>
+            ) : (
+              <>プロジェクト 📁</>
+            )}
+          </h1>
         </div>
-        <Link href="/projects/new" className="todon-btn-primary text-sm">
+        <Link
+          href={isTeam ? `/projects/new?teamId=${scope.teamId}` : '/projects/new'}
+          className="todon-btn-primary text-sm"
+        >
           新規プロジェクト
         </Link>
       </div>
 
       {projects.length === 0 ? (
-        <p className="todon-muted">プロジェクトを作ってタスクをまとめましょう</p>
+        <p className="todon-muted">
+          {isTeam
+            ? 'チームのプロジェクトを作ってタスクをまとめましょう'
+            : 'プロジェクトを作ってタスクをまとめましょう'}
+        </p>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
