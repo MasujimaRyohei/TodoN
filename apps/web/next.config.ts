@@ -1,9 +1,10 @@
-import type { NextConfig } from "next";
+import path from 'path';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@todon/shared'],
   turbopack: {
-    root: '../..',
+    root: path.join(__dirname, '../..'),
   },
 };
 

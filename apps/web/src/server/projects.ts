@@ -1,6 +1,7 @@
-import type { AppScope, Project } from '@todon/shared';
+import type { Project } from '@todon/shared';
 
 import { BadRequestError, NotFoundError } from '@/lib/http';
+import type { AppScope } from '@/lib/scope-preferences';
 import { mapTask } from '@/lib/mappers';
 import { prisma } from '@/lib/prisma';
 

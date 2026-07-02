@@ -153,6 +153,10 @@ export type DashboardTodayInfo = {
 };
 
 export type DashboardPayload = {
+  scopeMode: 'personal' | 'team';
+  teamId?: string;
+  teamName?: string;
+  teamIcon?: string | null;
   overdue: Task[];
   dueToday: Task[];
   dueSoon: Task[];
@@ -171,6 +175,8 @@ export type DashboardPayload = {
 export type Project = {
   id: string;
   userId: string;
+  scope?: TaskScope;
+  teamId?: string | null;
   name: string;
   description?: string | null;
   color?: string | null;
