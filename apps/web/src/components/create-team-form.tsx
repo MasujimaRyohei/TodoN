@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { TEAM_ICON_PRESETS } from '@/components/scope-switcher';
+import { TEAM_ICON_PRESETS } from '@/lib/team-icon-presets';
 import { persistAppScope } from '@/lib/scope-preferences';
 
 export function CreateTeamForm() {

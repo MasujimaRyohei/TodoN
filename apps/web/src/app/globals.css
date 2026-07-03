@@ -451,3 +451,24 @@ body {
   color: var(--todon-ink-muted);
   white-space: nowrap;
 }
+
+.scope-switcher-active-team {
+  margin-left: auto;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--todon-primary);
+}
+
+.scope-switcher-team-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e7e5e4;
+  background: #fafaf9;
+  padding: 0.5rem;
+}

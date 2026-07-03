@@ -1,31 +1,26 @@
 'use client';
 
-import type { Team } from '@todon/shared';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { ScopeSwitcherPanel } from '@/components/scope-switcher-panel';
 import {
   type AppScope,
   persistAppScope,
   readAppScope,
   readScopeFromCookie,
-  scopedHomePath,
   scopeFromPathname,
   teamDisplayIcon,
 } from '@/lib/scope-preferences';
 
-const TEAM_ICON_PRESETS = ['🚀', '⚡', '🎯', '🌟', '💼', '🎨', '🔥', '🐣', '👋', '🌱'];
-
 export function ScopeSwitcher() {
-  const router = useRouter();
   const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = useState(false);
-  const [teamHover, setTeamHover] = useState(false);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [scope, setScope] = useState<AppScope>({ mode: 'personal' });
+  const [activeTeamName, setActiveTeamName] = useState<string | null>(null);
+  const [activeTeamIcon, setActiveTeamIcon] = useState<string | null>(null);
 
   useEffect(() => {
     const fromPath = scopeFromPathname(pathname);
@@ -37,11 +32,24 @@ export function ScopeSwitcher() {
   }, [pathname]);
 
   useEffect(() => {
+    if (scope.mode !== 'team' || !scope.teamId) {
+      setActiveTeamName(null);
+      setActiveTeamIcon(null);
+      return;
+    }
+
     void fetch('/api/teams', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Team[]) => setTeams(Array.isArray(data) ? data : []))
-      .catch(() => setTeams([]));
-  }, [pathname]);
+      .then((teams: Array<{ id: string; name: string; icon?: string | null }>) => {
+        const team = teams.find((item) => item.id === scope.teamId);
+        setActiveTeamName(team?.name ?? scope.teamName ?? 'T');
+        setActiveTeamIcon(team?.icon ?? scope.teamIcon ?? null);
+      })
+      .catch(() => {
+        setActiveTeamName(scope.teamName ?? 'T');
+        setActiveTeamIcon(scope.teamIcon ?? null);
+      });
+  }, [pathname, scope]);
 
   useEffect(() => {
     if (!open) {
@@ -51,14 +59,12 @@ export function ScopeSwitcher() {
     function onPointerDown(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) {
         setOpen(false);
-        setTeamHover(false);
       }
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setOpen(false);
-        setTeamHover(false);
       }
     }
 
@@ -70,121 +76,29 @@ export function ScopeSwitcher() {
     };
   }, [open]);
 
-  const activeTeam =
-    scope.mode === 'team' ? teams.find((team) => team.id === scope.teamId) : undefined;
-
   const triggerLabel =
-    scope.mode === 'personal' ? '個' : teamDisplayIcon(activeTeam ?? { name: scope.teamName ?? 'T', icon: scope.teamIcon });
-
-  function selectPersonal() {
-    const next: AppScope = { mode: 'personal' };
-    persistAppScope(next);
-    setScope(next);
-    setOpen(false);
-    setTeamHover(false);
-    router.push(scopedHomePath(pathname));
-    router.refresh();
-  }
-
-  function selectTeam(team: Team) {
-    const next: AppScope = {
-      mode: 'team',
-      teamId: team.id,
-      teamName: team.name,
-      teamIcon: team.icon,
-    };
-    persistAppScope(next);
-    setScope(next);
-    setOpen(false);
-    setTeamHover(false);
-    router.push(scopedHomePath(pathname));
-    router.refresh();
-  }
+    scope.mode === 'personal'
+      ? '個'
+      : teamDisplayIcon({ name: activeTeamName ?? 'T', icon: activeTeamIcon });
 
   return (
-    <div ref={rootRef} className="scope-switcher">
+    <div ref={rootRef} className="scope-switcher hidden sm:block">
       <button
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={scope.mode === 'personal' ? '個人モード（切り替え）' : `チーム: ${activeTeam?.name ?? 'チーム'}（切り替え）`}
+        aria-label={
+          scope.mode === 'personal'
+            ? '個人モード（切り替え）'
+            : `チーム: ${activeTeamName ?? 'チーム'}（切り替え）`
+        }
         className="scope-switcher-trigger"
         onClick={() => setOpen((value) => !value)}
       >
         <span className="scope-switcher-trigger-label">{triggerLabel}</span>
       </button>
 
-      {open ? (
-        <div className="scope-switcher-panel" role="menu">
-          <button type="button" role="menuitem" className="scope-switcher-item" onClick={selectPersonal}>
-            <span className="scope-switcher-item-icon">個</span>
-            <span>個人</span>
-          </button>
-
-          <div
-            className="scope-switcher-team-row"
-            onMouseEnter={() => setTeamHover(true)}
-            onMouseLeave={() => setTeamHover(false)}
-          >
-            <button
-              type="button"
-              role="menuitem"
-              className={`scope-switcher-item ${teamHover ? 'scope-switcher-item-active' : ''}`}
-              onClick={() => setTeamHover(true)}
-            >
-              <span className="scope-switcher-item-icon">👥</span>
-              <span>チーム</span>
-              <span className="scope-switcher-arrow" aria-hidden>
-                →
-              </span>
-            </button>
-
-            {teamHover ? (
-              <div className="scope-switcher-team-flyout" role="menu">
-                <div className="scope-switcher-team-chips">
-                  {teams.length === 0 ? (
-                    <p className="scope-switcher-empty">参加中のチームがありません</p>
-                  ) : (
-                    teams.map((team) => {
-                      const icon = teamDisplayIcon(team);
-                      const active = scope.mode === 'team' && scope.teamId === team.id;
-
-                      return (
-                        <button
-                          key={team.id}
-                          type="button"
-                          role="menuitem"
-                          title={team.name}
-                          className={`scope-switcher-team-chip ${active ? 'scope-switcher-team-chip-active' : ''}`}
-                          onClick={() => selectTeam(team)}
-                        >
-                          <span className="text-lg leading-none">{icon}</span>
-                          <span className="scope-switcher-team-name">{team.name}</span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-                <Link
-                  href="/teams"
-                  className="scope-switcher-team-list-link"
-                  onClick={() => {
-                    setOpen(false);
-                    setTeamHover(false);
-                  }}
-                >
-                  <span>チーム一覧</span>
-                  <span className="scope-switcher-arrow" aria-hidden>
-                    →
-                  </span>
-                </Link>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+      {open ? <ScopeSwitcherPanel onNavigate={() => setOpen(false)} /> : null}
     </div>
   );
 }
-
-export { TEAM_ICON_PRESETS };

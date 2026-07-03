@@ -2,7 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 
-export function LogoutButton() {
+type LogoutButtonProps = {
+  className?: string;
+};
+
+export function LogoutButton({ className }: LogoutButtonProps) {
   const router = useRouter();
 
   async function onLogout() {
@@ -16,7 +20,11 @@ export function LogoutButton() {
   }
 
   return (
-    <button type="button" className="todon-btn-ghost text-xs" onClick={() => void onLogout()}>
+    <button
+      type="button"
+      className={`todon-btn-ghost text-xs ${className ?? ''}`.trim()}
+      onClick={() => void onLogout()}
+    >
       ログアウト
     </button>
   );

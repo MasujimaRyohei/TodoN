@@ -15,6 +15,12 @@ export const metadata = {
   description: '個人とチームのタスクを詰まらせずに進めるためのアプリ',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,4 +1,4 @@
-import { AppHeader } from '@/components/app-header';
+import { AppShell } from '@/components/app-shell';
 import { ScopeInvalidationSync } from '@/components/scope-invalidation-sync';
 import { ScopeSwitcher } from '@/components/scope-switcher';
 import { getCurrentUserId } from '@/lib/auth/session';
@@ -19,8 +19,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
         <div className="todon-blob todon-blob-yellow" />
       </div>
       <ScopeSwitcher />
-      <AppHeader />
-      <main className="relative mx-auto w-full max-w-5xl px-4 py-8 pl-12 sm:pl-14">{children}</main>
+      <AppShell>{children}</AppShell>
     </div>
   );
 }
