@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { verifyUserToken } from '@/lib/auth/jwt';
+import { createMiddlewareClient, updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -14,10 +15,6 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/archive/') ||
     pathname === '/reviews' ||
     pathname.startsWith('/reviews/') ||
-    pathname === '/teams' ||
-    pathname.startsWith('/teams/') ||
-    pathname === '/join' ||
-    pathname.startsWith('/join/') ||
     pathname === '/settings' ||
     pathname.startsWith('/settings/') ||
     pathname === '/calendar' ||
@@ -29,32 +26,62 @@ export async function middleware(req: NextRequest) {
     pathname === '/templates' ||
     pathname.startsWith('/templates/') ||
     pathname === '/habits' ||
-    pathname.startsWith('/habits/');
+    pathname.startsWith('/habits/') ||
+    pathname === '/teams' ||
+    pathname.startsWith('/teams/') ||
+    pathname === '/join' ||
+    pathname.startsWith('/join/');
 
-  if (!isProtected) {
-    return NextResponse.next();
-  }
-
-  const token = req.cookies.get('todon_token')?.value;
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
+  let response: NextResponse;
 
   try {
-    await verifyUserToken(token);
-    const response = NextResponse.next();
-    const teamMatch = pathname.match(/^\/teams\/([^/]+)/);
-    if (teamMatch?.[1] && teamMatch[1] !== 'new') {
-      response.cookies.set('todon_scope', `team:${teamMatch[1]}`, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365,
-        sameSite: 'lax',
-      });
-    }
-    return response;
+    response = await updateSession(req);
   } catch {
+    response = NextResponse.next({ request: req });
+  }
+
+  if (!isProtected) {
+    return response;
+  }
+
+  let authed = false;
+
+  try {
+    const supabase = createMiddlewareClient(req, response);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    authed = Boolean(user);
+  } catch {
+    // Supabase 未設定時は JWT のみ
+  }
+
+  if (!authed) {
+    const token = req.cookies.get('todon_token')?.value;
+    if (token) {
+      try {
+        await verifyUserToken(token);
+        authed = true;
+      } catch {
+        authed = false;
+      }
+    }
+  }
+
+  if (!authed) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
+
+  const teamMatch = pathname.match(/^\/teams\/([^/]+)/);
+  if (teamMatch?.[1] && teamMatch[1] !== 'new') {
+    response.cookies.set('todon_scope', `team:${teamMatch[1]}`, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
+  }
+
+  return response;
 }
 
 export const config = {

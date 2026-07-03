@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 
 import { COOKIE_NAME, verifyUserToken } from './auth/jwt';
+import { createClient } from './supabase/server';
+import { findPrismaUserIdBySupabaseAuth } from './supabase/sync-user';
 
 export async function getUserIdFromRequest(req: Request) {
   const auth = req.headers.get('authorization');
@@ -11,6 +13,19 @@ export async function getUserIdFromRequest(req: Request) {
     } catch {
       return null;
     }
+  }
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      return findPrismaUserIdBySupabaseAuth(user);
+    }
+  } catch {
+    // Supabase 未設定時は JWT cookie のみ
   }
 
   const cookieHeader = req.headers.get('cookie');

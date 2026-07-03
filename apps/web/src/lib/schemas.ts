@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  name: z.string().min(1).max(64).optional(),
+  name: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z.string().min(1).max(64).optional(),
+  ),
 });
 
 export const loginSchema = z.object({

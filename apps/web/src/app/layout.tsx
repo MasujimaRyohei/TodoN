@@ -2,6 +2,8 @@ import "./globals.css";
 
 import { M_PLUS_Rounded_1c } from 'next/font/google';
 
+import { AppFooter } from '@/components/app-footer';
+
 const todonFont = M_PLUS_Rounded_1c({
   variable: '--font-todon',
   subsets: ['latin'],
@@ -23,7 +25,10 @@ export default function RootLayout({
       lang="ja"
       className={`${todonFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="flex min-h-full flex-1 flex-col">{children}</div>
+        <AppFooter />
+      </body>
     </html>
   );
 }
