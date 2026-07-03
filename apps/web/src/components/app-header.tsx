@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { AppLogo } from '@/components/app-logo';
 import { primaryNav } from '@/components/nav-items';
 import { LogoutButton } from '@/components/logout-button';
 import { TeamNavLink } from '@/components/team-nav-link';
@@ -15,14 +16,7 @@ export function AppHeader({ onOpenMobileMenu }: AppHeaderProps) {
     <header className="relative border-b-2 border-todon-border bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 rounded-full bg-todon-primary-soft px-3 py-1.5 text-lg font-extrabold text-todon-primary transition hover:bg-todon-yellow-soft"
-          >
-            <span aria-hidden>🐣</span>
-            TodoN
-          </Link>
-          <span className="hidden text-xs font-bold text-todon-ink-muted sm:inline">トドン</span>
+          <AppLogo size="sm" priority />
         </div>
 
         <nav className="hidden items-center gap-1.5 text-sm sm:flex">

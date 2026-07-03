@@ -13,6 +13,10 @@ const todonFont = M_PLUS_Rounded_1c({
 export const metadata = {
   title: 'TodoN（トドン）',
   description: '個人とチームのタスクを詰まらせずに進めるためのアプリ',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
 };
 
 export const viewport = {

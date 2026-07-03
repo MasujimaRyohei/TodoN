@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { AppLogo } from '@/components/app-logo';
+
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-full overflow-hidden bg-todon-bg text-todon-ink">
@@ -11,13 +13,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="relative mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-16">
         <div className="mb-10 text-center">
           <p className="todon-eyebrow">はじめまして</p>
-          <h1 className="text-3xl font-extrabold text-todon-ink">
-            TodoN
-            <span className="ml-1 text-2xl" aria-hidden>
-              ✨
-            </span>
-          </h1>
-          <p className="mt-2 text-sm text-todon-ink-muted">生活と仕事の「詰まり」を、やさしくほどく</p>
+          <div className="mt-3 flex justify-center">
+            <AppLogo size="md" linked={false} priority />
+          </div>
+          <p className="mt-3 text-sm text-todon-ink-muted">生活と仕事の「詰まり」を、やさしくほどく</p>
         </div>
         <div className="todon-card p-8">{children}</div>
       </div>
