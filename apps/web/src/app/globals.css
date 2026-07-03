@@ -181,6 +181,32 @@ body {
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
 
+.todon-password-field {
+  position: relative;
+}
+
+.todon-password-input {
+  padding-right: 3.5rem;
+}
+
+.todon-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.625rem;
+  transform: translateY(-50%);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--todon-ink-muted);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.todon-password-toggle:hover {
+  color: var(--todon-primary);
+  background: var(--todon-primary-soft);
+}
+
 .todon-btn-primary {
   border-radius: 9999px;
   background: linear-gradient(135deg, #fb923c 0%, #f97316 55%, #f472b6 100%);

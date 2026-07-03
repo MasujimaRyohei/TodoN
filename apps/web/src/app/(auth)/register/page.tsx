@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { PasswordInput } from '@/components/password-input';
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -63,11 +65,9 @@ export default function RegisterPage() {
         </div>
         <div className="space-y-2 text-left">
           <label className="todon-label">パスワード</label>
-          <input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             minLength={8}
-            className="todon-input"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
