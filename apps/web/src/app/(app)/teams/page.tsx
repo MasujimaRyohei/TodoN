@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { TeamsListClient } from '@/components/teams-list-client';
 import { getCurrentUserId } from '@/lib/auth/session';
 import { listPendingInvitesForUser, listTeamsForUser } from '@/server/teams';
 
@@ -12,61 +12,5 @@ export default async function TeamsPage() {
 
   const [teams, invites] = await Promise.all([listTeamsForUser(userId), listPendingInvitesForUser(userId)]);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="todon-eyebrow">v2 · チーム</p>
-          <h1 className="todon-page-title">チーム一覧</h1>
-        </div>
-        <Link
-          href="/teams/new"
-          className="todon-btn-primary"
-        >
-          チームを作成
-        </Link>
-      </div>
-
-      {invites.length > 0 ? (
-        <section className="todon-card todon-card-yellow p-4">
-          <h2 className="text-sm font-semibold text-amber-200">保留中の招待</h2>
-          <ul className="mt-3 space-y-2">
-            {invites.map((invite) => (
-              <li key={invite.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="text-todon-ink">
-                  {invite.teamName} への招待（{invite.email}）
-                </span>
-                <Link
-                  href={`/join?token=${invite.token}`}
-                  className="text-emerald-300 hover:underline"
-                >
-                  参加する
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {teams.length === 0 ? (
-        <p className="todon-muted">まだチームがありません。作成するか、招待を受け取ってください。</p>
-      ) : (
-        <ul className="grid gap-4 md:grid-cols-2">
-          {teams.map((team) => (
-            <li key={team.id}>
-              <Link
-                href={`/teams/${team.id}`}
-                className="block todon-card p-5 transition hover:border-todon-sky"
-              >
-                <h2 className="text-lg font-extrabold text-todon-ink">{team.name}</h2>
-                <p className="mt-1 text-xs text-todon-ink-muted">
-                  あなたのロール: {team.myRole} / メンバー {team.memberCount ?? 1} 人
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+  return <TeamsListClient initialTeams={teams} invites={invites} />;
 }

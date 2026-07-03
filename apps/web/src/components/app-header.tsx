@@ -1,16 +1,16 @@
 import Link from 'next/link';
 
 import { LogoutButton } from '@/components/logout-button';
+import { TeamNavLink } from '@/components/team-nav-link';
 
 const nav = [
   { href: '/dashboard', label: 'ホーム', emoji: '🏠' },
   { href: '/tasks', label: 'タスク', emoji: '✏️' },
   { href: '/calendar', label: 'カレンダー', emoji: '📅' },
   { href: '/projects', label: 'プロジェクト', emoji: '📁' },
-  { href: '/teams', label: 'チーム', emoji: '👋' },
   { href: '/habits', label: '習慣', emoji: '🌱' },
   { href: '/settings', label: '設定', emoji: '⚙️' },
-];
+] as const;
 
 export function AppHeader() {
   return (
@@ -37,6 +37,7 @@ export function AppHeader() {
               {item.label}
             </Link>
           ))}
+          <TeamNavLink />
         </nav>
         <LogoutButton />
       </div>

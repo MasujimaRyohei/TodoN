@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "TeamMember" ADD COLUMN "sortOrder" INTEGER NOT NULL DEFAULT 0;

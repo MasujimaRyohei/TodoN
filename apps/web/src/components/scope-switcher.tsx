@@ -9,6 +9,7 @@ import {
   type AppScope,
   persistAppScope,
   readAppScope,
+  readScopeFromCookie,
   scopedHomePath,
   scopeFromPathname,
   teamDisplayIcon,
@@ -28,8 +29,9 @@ export function ScopeSwitcher() {
 
   useEffect(() => {
     const fromPath = scopeFromPathname(pathname);
+    const fromCookie = readScopeFromCookie();
     const stored = readAppScope();
-    const next = fromPath ?? stored ?? { mode: 'personal' };
+    const next = fromPath ?? fromCookie ?? stored ?? { mode: 'personal' };
     setScope(next);
     persistAppScope(next);
   }, [pathname]);
@@ -139,31 +141,42 @@ export function ScopeSwitcher() {
 
             {teamHover ? (
               <div className="scope-switcher-team-flyout" role="menu">
-                {teams.length === 0 ? (
-                  <p className="scope-switcher-empty">参加中のチームがありません</p>
-                ) : (
-                  teams.map((team) => {
-                    const icon = teamDisplayIcon(team);
-                    const active = scope.mode === 'team' && scope.teamId === team.id;
+                <div className="scope-switcher-team-chips">
+                  {teams.length === 0 ? (
+                    <p className="scope-switcher-empty">参加中のチームがありません</p>
+                  ) : (
+                    teams.map((team) => {
+                      const icon = teamDisplayIcon(team);
+                      const active = scope.mode === 'team' && scope.teamId === team.id;
 
-                    return (
-                      <button
-                        key={team.id}
-                        type="button"
-                        role="menuitem"
-                        title={team.name}
-                        className={`scope-switcher-team-chip ${active ? 'scope-switcher-team-chip-active' : ''}`}
-                        onClick={() => selectTeam(team)}
-                      >
-                        <span className="text-lg leading-none">{icon}</span>
-                        <span className="scope-switcher-team-name">{team.name}</span>
-                      </button>
-                    );
-                  })
-                )}
-                <Link href="/teams/new" className="scope-switcher-team-chip scope-switcher-team-add" onClick={() => setOpen(false)}>
-                  <span className="text-lg leading-none">＋</span>
-                  <span className="scope-switcher-team-name">新規</span>
+                      return (
+                        <button
+                          key={team.id}
+                          type="button"
+                          role="menuitem"
+                          title={team.name}
+                          className={`scope-switcher-team-chip ${active ? 'scope-switcher-team-chip-active' : ''}`}
+                          onClick={() => selectTeam(team)}
+                        >
+                          <span className="text-lg leading-none">{icon}</span>
+                          <span className="scope-switcher-team-name">{team.name}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <Link
+                  href="/teams"
+                  className="scope-switcher-team-list-link"
+                  onClick={() => {
+                    setOpen(false);
+                    setTeamHover(false);
+                  }}
+                >
+                  <span>チーム一覧</span>
+                  <span className="scope-switcher-arrow" aria-hidden>
+                    →
+                  </span>
                 </Link>
               </div>
             ) : null}

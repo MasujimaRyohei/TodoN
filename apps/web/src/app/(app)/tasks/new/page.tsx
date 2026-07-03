@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 
 import { NewTaskForm } from '@/components/new-task-form';
 import { getCurrentUserId } from '@/lib/auth/session';
-import { getServerAppScope } from '@/lib/scope-server';
+import { getValidatedServerAppScope } from '@/lib/scope-server';
 import { listCategories } from '@/server/categories';
 import { listProjects } from '@/server/projects';
 import { listTeamsForUser } from '@/server/teams';
@@ -15,7 +15,7 @@ export default async function NewTaskPage() {
     redirect('/login');
   }
 
-  const scope = await getServerAppScope();
+  const { scope } = await getValidatedServerAppScope(userId);
 
   const [categories, teams, projects] = await Promise.all([
     listCategories(userId),

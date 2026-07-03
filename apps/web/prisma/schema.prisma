@@ -52,6 +52,7 @@ model TeamMember {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      String   // owner | admin | member
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
   @@unique([teamId, userId])

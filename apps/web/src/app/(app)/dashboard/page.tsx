@@ -5,11 +5,9 @@ import { CapacitySelector } from '@/components/capacity-selector';
 import { DashboardTaskBoard } from '@/components/dashboard-task-panels';
 import { DashboardTodayHero } from '@/components/dashboard-today-hero';
 import { getCurrentUserId } from '@/lib/auth/session';
-import { getServerAppScope } from '@/lib/scope-server';
+import { getValidatedServerAppScope } from '@/lib/scope-server';
 import { teamDisplayIcon } from '@/lib/scope-preferences';
-import { NotFoundError } from '@/lib/http';
 import { buildDashboard } from '@/server/dashboard';
-import { getTeamForUser } from '@/server/teams';
 
 export default async function DashboardPage() {
   const userId = await getCurrentUserId();
@@ -18,18 +16,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const scope = await getServerAppScope();
-
-  if (scope.mode === 'team') {
-    try {
-      await getTeamForUser(userId, scope.teamId);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        redirect('/dashboard');
-      }
-      throw error;
-    }
-  }
+  const { scope } = await getValidatedServerAppScope(userId);
 
   const data = await buildDashboard(userId, scope);
   const isTeam = data.scopeMode === 'team';

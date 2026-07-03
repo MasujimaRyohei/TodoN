@@ -116,6 +116,10 @@ export const inviteMemberSchema = z.object({
   email: z.string().email(),
 });
 
+export const reorderTeamsSchema = z.object({
+  teamIds: z.array(z.string().min(1)).min(1),
+});
+
 export const updateMemberRoleSchema = z.object({
   role: z.enum(['admin', 'member']),
 });

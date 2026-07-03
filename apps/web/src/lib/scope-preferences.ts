@@ -24,6 +24,15 @@ export function serializeScopeCookie(scope: AppScope): string {
   return scope.mode === 'personal' ? 'personal' : `team:${scope.teamId}`;
 }
 
+export function readScopeFromCookie(): AppScope | null {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${SCOPE_COOKIE_NAME}=([^;]+)`));
+  return parseScopeCookie(match?.[1] ? decodeURIComponent(match[1]) : null);
+}
+
 export function persistAppScope(scope: AppScope) {
   if (typeof window === 'undefined') {
     return;
@@ -31,6 +40,7 @@ export function persistAppScope(scope: AppScope) {
 
   writeAppScope(scope);
   document.cookie = `${SCOPE_COOKIE_NAME}=${serializeScopeCookie(scope)}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+  window.dispatchEvent(new CustomEvent('todon:scope-change', { detail: scope }));
 }
 
 export function scopedHomePath(pathname: string): '/dashboard' | '/tasks' | '/projects' {
@@ -79,6 +89,14 @@ export function scopeFromPathname(pathname: string): AppScope | null {
   }
 
   return null;
+}
+
+export function teamNavHref(scope: AppScope): '/teams' | `/teams/${string}` {
+  if (scope.mode === 'team' && scope.teamId) {
+    return `/teams/${scope.teamId}`;
+  }
+
+  return '/teams';
 }
 
 export function teamDisplayIcon(team: { icon?: string | null; name: string }) {

@@ -3,8 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUserId } from '@/lib/auth/session';
-import { NotFoundError } from '@/lib/http';
-import { getServerAppScope } from '@/lib/scope-server';
+import { getValidatedServerAppScope } from '@/lib/scope-server';
 import { teamDisplayIcon } from '@/lib/scope-preferences';
 import { listTasks } from '@/server/tasks';
 import { listTeamTasks } from '@/server/team-tasks';
@@ -39,7 +38,7 @@ export default async function TasksPage() {
     redirect('/login');
   }
 
-  const scope = await getServerAppScope();
+  const { scope } = await getValidatedServerAppScope(userId);
   const isTeam = scope.mode === 'team';
 
   let title = '個人タスク';
@@ -48,18 +47,11 @@ export default async function TasksPage() {
   let newTaskHref = '/tasks/new';
 
   if (isTeam) {
-    try {
-      const team = await getTeamForUser(userId, scope.teamId);
-      tasks = await listTeamTasks(userId, scope.teamId, false);
-      title = `${team.name} のタスク`;
-      eyebrow = 'チーム';
-      newTaskHref = `/tasks/new?teamId=${scope.teamId}`;
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        redirect('/tasks');
-      }
-      throw error;
-    }
+    const team = await getTeamForUser(userId, scope.teamId);
+    tasks = await listTeamTasks(userId, scope.teamId, false);
+    title = `${team.name} のタスク`;
+    eyebrow = 'チーム';
+    newTaskHref = `/tasks/new?teamId=${scope.teamId}`;
   } else {
     tasks = await listTasks(userId, false);
   }

@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUserId } from '@/lib/auth/session';
-import { NotFoundError } from '@/lib/http';
-import { getServerAppScope } from '@/lib/scope-server';
+import { getValidatedServerAppScope } from '@/lib/scope-server';
 import { teamDisplayIcon } from '@/lib/scope-preferences';
 import { listProjects } from '@/server/projects';
 import { getTeamForUser } from '@/server/teams';
@@ -14,19 +13,12 @@ export default async function ProjectsPage() {
     redirect('/login');
   }
 
-  const scope = await getServerAppScope();
+  const { scope } = await getValidatedServerAppScope(userId);
   const isTeam = scope.mode === 'team';
 
   let team = null;
   if (isTeam) {
-    try {
-      team = await getTeamForUser(userId, scope.teamId);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        redirect('/projects');
-      }
-      throw error;
-    }
+    team = await getTeamForUser(userId, scope.teamId);
   }
 
   const projects = await listProjects(userId, scope);

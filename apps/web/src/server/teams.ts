@@ -48,6 +48,15 @@ function mapInvite(row: PrismaInvite & { team?: { name: string } }): TeamInvite 
   };
 }
 
+async function nextTeamSortOrder(userId: string, tx: Pick<typeof prisma, 'teamMember'> = prisma) {
+  const maxSort = await tx.teamMember.aggregate({
+    where: { userId },
+    _max: { sortOrder: true },
+  });
+
+  return (maxSort._max.sortOrder ?? -1) + 1;
+}
+
 export async function listTeamsForUser(userId: string) {
   const memberships = await prisma.teamMember.findMany({
     where: { userId },
@@ -59,7 +68,7 @@ export async function listTeamsForUser(userId: string) {
         },
       },
     },
-    orderBy: { team: { updatedAt: 'desc' } },
+    orderBy: [{ sortOrder: 'asc' }, { team: { updatedAt: 'desc' } }],
   });
 
   return memberships.map((m) => mapTeam({ ...m.team, members: [{ role: m.role }] }));
@@ -92,6 +101,8 @@ export async function createTeam(userId: string, name: string, icon?: string | n
   const iconValue = icon?.trim() || null;
 
   const team = await prisma.$transaction(async (tx) => {
+    const sortOrder = await nextTeamSortOrder(userId, tx);
+
     const created = await tx.team.create({
       data: {
         name: trimmed,
@@ -105,6 +116,7 @@ export async function createTeam(userId: string, name: string, icon?: string | n
         teamId: created.id,
         userId,
         role: 'owner',
+        sortOrder,
       },
     });
 
@@ -158,6 +170,37 @@ export async function deleteTeam(userId: string, teamId: string) {
   await requireTeamOwner(userId, teamId);
 
   await prisma.team.delete({ where: { id: teamId } });
+}
+
+export async function leaveTeam(userId: string, teamId: string) {
+  const membership = await requireMembership(userId, teamId);
+
+  if (membership.role === 'owner') {
+    throw new BadRequestError('オーナーは「チームを削除」してください');
+  }
+
+  await prisma.teamMember.delete({ where: { id: membership.id } });
+}
+
+export async function reorderTeamsForUser(userId: string, teamIds: string[]) {
+  const memberships = await prisma.teamMember.findMany({
+    where: { userId },
+    select: { teamId: true },
+  });
+
+  const ownedIds = new Set(memberships.map((m) => m.teamId));
+  if (teamIds.length !== ownedIds.size || teamIds.some((id) => !ownedIds.has(id))) {
+    throw new BadRequestError('並び替え対象のチームを確認してください');
+  }
+
+  await prisma.$transaction(
+    teamIds.map((teamId, index) =>
+      prisma.teamMember.update({
+        where: { teamId_userId: { teamId, userId } },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
 }
 
 export async function listTeamMembers(userId: string, teamId: string) {
@@ -253,6 +296,7 @@ export async function inviteByEmail(actorId: string, teamId: string, email: stri
         teamId,
         userId: existingUser.id,
         role: 'member',
+        sortOrder: await nextTeamSortOrder(existingUser.id),
       },
       include: {
         user: { select: { id: true, email: true, name: true, createdAt: true } },
@@ -309,6 +353,7 @@ export async function acceptInvite(userId: string, token: string) {
         teamId: invite.teamId,
         userId,
         role: 'member',
+        sortOrder: await nextTeamSortOrder(userId),
       },
     });
   }
