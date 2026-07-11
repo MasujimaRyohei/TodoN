@@ -7,6 +7,12 @@ const sizes = {
   lg: 128,
 } as const;
 
+const roundings = {
+  sm: 'rounded-xl',
+  md: 'rounded-3xl',
+  lg: 'rounded-[2rem]',
+} as const;
+
 type AppLogoProps = {
   size?: keyof typeof sizes;
   className?: string;
@@ -30,7 +36,7 @@ export function AppLogo({
       alt="TodoN（トドン）"
       width={dimension}
       height={dimension}
-      className={`h-auto w-auto ${className}`.trim()}
+      className={`h-auto w-auto ${roundings[size]} ${className}`.trim()}
       priority={priority}
     />
   );
