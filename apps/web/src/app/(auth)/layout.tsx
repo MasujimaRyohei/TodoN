@@ -16,7 +16,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <div className="mt-3 flex justify-center">
             <AppLogo size="md" linked={false} priority />
           </div>
-          <p className="mt-3 text-sm text-todon-ink-muted">生活と仕事の「詰まり」を、やさしくほどく</p>
         </div>
         <div className="todon-card p-8">{children}</div>
       </div>
