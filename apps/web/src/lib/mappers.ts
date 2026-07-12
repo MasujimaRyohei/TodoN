@@ -98,6 +98,7 @@ export function mapTask(
     projectId: row.projectId,
     startAt: toIso(row.startAt),
     weight: row.weight as TaskWeight,
+    points: row.points,
     archivedAt: toIso(row.archivedAt),
     deletedAt: toIso(row.deletedAt),
     createdAt: row.createdAt.toISOString(),

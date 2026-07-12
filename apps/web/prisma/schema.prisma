@@ -123,6 +123,7 @@ model Task {
   startAt   DateTime?
 
   weight String @default("normal")
+  points  Int    @default(3)
 
   archivedAt DateTime?
   deletedAt  DateTime?

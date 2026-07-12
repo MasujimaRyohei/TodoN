@@ -37,6 +37,7 @@ export type Task = {
   projectId?: string | null;
   startAt?: string | null;
   weight: TaskWeight;
+  points: number;
   archivedAt?: string | null;
   deletedAt?: string | null;
   createdAt: string;
@@ -98,6 +99,26 @@ export type TeamMember = {
   role: TeamRole;
   createdAt: string;
   user?: User;
+};
+
+export type TeamMemberPointsSummary = {
+  userId: string;
+  name: string | null;
+  email: string;
+  allTime: number;
+  month: number;
+  week: number;
+  today: number;
+};
+
+export type TeamPointsPayload = {
+  members: TeamMemberPointsSummary[];
+  teamTotal: {
+    allTime: number;
+    month: number;
+    week: number;
+    today: number;
+  };
 };
 
 export type TeamInvite = {
@@ -191,6 +212,7 @@ export type TaskTemplatePayload = {
   importance?: PriorityLevel;
   urgency?: PriorityLevel;
   weight?: TaskWeight;
+  points?: number;
   dueType?: DueType;
   repeatType?: RepeatType;
   categoryName?: string | null;
