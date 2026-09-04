@@ -12,12 +12,14 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(evt: React.FormEvent) {
     evt.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
 
     try {
       const res = await fetch('/api/auth/register', {
@@ -27,9 +29,15 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password, name }),
       });
 
+      const body = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
         throw new Error((body as { message?: string }).message ?? '登録に失敗しました');
+      }
+
+      if ((body as { needsEmailConfirmation?: boolean }).needsEmailConfirmation) {
+        setInfo('確認メールを送信しました。メールのリンクを開いてからログインしてください。');
+        return;
       }
 
       router.replace('/dashboard');
@@ -74,6 +82,7 @@ export default function RegisterPage() {
           />
         </div>
         {error ? <p className="todon-error">{error}</p> : null}
+        {info ? <p className="todon-link">{info}</p> : null}
         <button type="submit" disabled={loading} className="todon-btn-primary w-full">
           {loading ? '送信中…' : '登録してはじめる'}
         </button>

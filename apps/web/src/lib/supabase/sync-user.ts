@@ -14,7 +14,6 @@ export async function upsertUserFromSupabase(params: {
       email,
       supabaseId: params.supabaseId,
       name,
-      passwordHash: null,
     },
     update: {
       supabaseId: params.supabaseId,

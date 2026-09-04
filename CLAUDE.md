@@ -51,14 +51,13 @@ There is **no `typecheck` script**. Check types per app with `pnpm --filter web 
 
 Prisma rows are converted to shared API types by mappers in `src/lib/mappers.ts` before leaving the server layer — API responses return mapped types (`Task`, `TaskWithPeople`, …), not raw Prisma models.
 
-### Auth — dual system, mid-migration
+### Auth — Supabase only
 
-Two mechanisms resolve a user, tried in order:
+A single mechanism: **Supabase Auth**. Web uses the SSR session cookies set by `@supabase/ssr` (route handlers use `createRouteHandlerClient`, server components `createClient`, middleware `createMiddlewareClient` + `updateSession`). Mobile sends the Supabase **access token** as `Authorization: Bearer` and stores the refresh token; `TodoNApiClient` retries once through `POST /api/auth/refresh` on a 401.
 
-1. **Supabase Auth** (SSR cookies for web, `Authorization: Bearer` for mobile) — the primary path. A Supabase user is linked to a Prisma `User` row via `supabaseId` (`src/lib/supabase/sync-user.ts`).
-2. **Legacy JWT** (`todon_token` cookie / Bearer, bcrypt passwords, `jose`) — fallback, used when Supabase env vars are absent.
+A Supabase user is linked to a Prisma `User` row via `supabaseId` (`src/lib/supabase/sync-user.ts`, `findPrismaUserIdBySupabaseAuth`). Server entry points: `getUserIdFromRequest` / `requireUser` (`src/lib/http.ts`) for API routes — `supabase.auth.getUser(bearerToken)` or cookie session; `getCurrentUserId` (`src/lib/auth/session.ts`) for server components. `src/middleware.ts` gates the protected route list and redirects to `/login`.
 
-Server entry points: `getUserIdFromRequest` / `requireUser` (`src/lib/http.ts`) for API routes; `getCurrentUserId` (`src/lib/auth/session.ts`) for server components. Both swallow Supabase errors and fall through to JWT. `src/middleware.ts` gates the protected route list and redirects to `/login`.
+`/api/auth/{login,register,refresh,logout}` are the only auth endpoints. Register may return `needsEmailConfirmation` when email confirmation is enabled in Supabase.
 
 ### Personal ↔ Team scope
 

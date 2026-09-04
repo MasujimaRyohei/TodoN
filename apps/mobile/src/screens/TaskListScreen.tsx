@@ -85,7 +85,7 @@ export default function TaskListScreen({ navigation }: Props) {
       }).catch(() => undefined);
     }
 
-    await auth.updateToken(null);
+    await auth.applyAuth(null);
   }
 
   return (

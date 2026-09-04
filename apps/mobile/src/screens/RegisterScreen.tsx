@@ -18,7 +18,7 @@ import type { AuthStackParamList } from '../navigation/types';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export default function RegisterScreen({ navigation }: Props) {
-  const { client, updateToken, baseUrl } = useAuthContext();
+  const { client, applyAuth, baseUrl } = useAuthContext();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +43,13 @@ export default function RegisterScreen({ navigation }: Props) {
         name: name || undefined,
       });
 
-      await updateToken(auth.token);
+      if (auth.needsEmailConfirmation || !auth.token) {
+        Alert.alert('確認メールを送信しました', 'メールのリンクを開いてからログインしてください。');
+        navigation.navigate('Login');
+        return;
+      }
+
+      await applyAuth(auth);
     } catch (error) {
       const message =
         error instanceof Error

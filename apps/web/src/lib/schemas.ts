@@ -14,6 +14,10 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const refreshSchema = z.object({
+  refreshToken: z.string().min(1),
+});
+
 const repeatFields = {
   repeatType: z.enum(['none', 'fixed', 'flexible']).optional(),
   repeatIntervalDays: z.number().int().min(1).max(365).optional().nullable(),

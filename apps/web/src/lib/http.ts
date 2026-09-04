@@ -1,54 +1,28 @@
 import { prisma } from '@/lib/prisma';
 
-import { COOKIE_NAME, verifyUserToken } from './auth/jwt';
 import { createClient } from './supabase/server';
 import { findPrismaUserIdBySupabaseAuth } from './supabase/sync-user';
 
+/**
+ * Resolves the current Prisma user id from a Supabase session:
+ * a bearer access token (mobile) or the SSR session cookies (web).
+ */
 export async function getUserIdFromRequest(req: Request) {
-  const auth = req.headers.get('authorization');
-  if (auth?.startsWith('Bearer ')) {
-    const token = auth.slice('Bearer '.length).trim();
-    try {
-      return await verifyUserToken(token);
-    } catch {
-      return null;
-    }
-  }
+  const supabase = await createClient();
+
+  const bearer = req.headers.get('authorization');
+  const accessToken = bearer?.startsWith('Bearer ') ? bearer.slice('Bearer '.length).trim() : null;
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data } = accessToken
+      ? await supabase.auth.getUser(accessToken)
+      : await supabase.auth.getUser();
 
-    if (user) {
-      return findPrismaUserIdBySupabaseAuth(user);
+    if (data.user) {
+      return findPrismaUserIdBySupabaseAuth(data.user);
     }
   } catch {
-    // Supabase 未設定時は JWT cookie のみ
-  }
-
-  const cookieHeader = req.headers.get('cookie');
-  if (!cookieHeader) {
     return null;
-  }
-
-  const parts = cookieHeader.split(';').map((c) => c.trim());
-  for (const part of parts) {
-    const idx = part.indexOf('=');
-    if (idx === -1) {
-      continue;
-    }
-    const name = part.slice(0, idx);
-    const value = part.slice(idx + 1);
-    if (name === COOKIE_NAME) {
-      const token = decodeURIComponent(value);
-      try {
-        return await verifyUserToken(token);
-      } catch {
-        return null;
-      }
-    }
   }
 
   return null;

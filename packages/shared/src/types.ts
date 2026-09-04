@@ -163,7 +163,14 @@ export type TaskWithPeople = Task & {
 
 export type AuthResponse = {
   user: User;
+  token: string | null;
+  refreshToken?: string | null;
+  needsEmailConfirmation?: boolean;
+};
+
+export type RefreshResponse = {
   token: string;
+  refreshToken: string;
 };
 
 import type { DashboardTodayProgress } from './today-progress';

@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   let db = false;
-  let auth = false;
   let dbError: string | null = null;
 
   try {
@@ -14,8 +13,10 @@ export async function GET() {
     dbError = error instanceof Error ? error.message : 'unknown';
   }
 
-  const secret = process.env.AUTH_SECRET;
-  auth = Boolean(secret && secret.length >= 16);
+  const auth = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+  );
 
   return NextResponse.json({
     ok: db && auth,

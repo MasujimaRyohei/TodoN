@@ -18,7 +18,7 @@ import type { AuthStackParamList } from '../navigation/types';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
-  const { client, updateToken, baseUrl } = useAuthContext();
+  const { client, applyAuth, baseUrl } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const auth = await client.login({ email, password });
 
-      await updateToken(auth.token);
+      await applyAuth(auth);
     } catch (error) {
       const message =
         error instanceof Error
