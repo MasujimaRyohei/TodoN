@@ -101,7 +101,10 @@ export default function TeamDetailScreen({ route, navigation }: Props) {
     setBusy(true);
     try {
       await client.generateTeamWeeklyReview(teamId);
-      Alert.alert('完了', 'チーム振り返りを生成しました。一覧は Web の振り返り画面と同様に API で取得できます。');
+      Alert.alert(
+        '完了',
+        'チーム振り返りを生成しました。一覧は Web の振り返り画面と同様に API で取得できます。',
+      );
     } catch (error) {
       Alert.alert('失敗', error instanceof Error ? error.message : '');
     } finally {
@@ -126,7 +129,10 @@ export default function TeamDetailScreen({ route, navigation }: Props) {
       <Text style={styles.title}>{team.name}</Text>
 
       <View style={styles.row}>
-        <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('TaskCreate', { teamId })}>
+        <TouchableOpacity
+          style={styles.btnPrimary}
+          onPress={() => navigation.navigate('TaskCreate', { teamId })}
+        >
           <Text style={styles.btnPrimaryLabel}>タスク作成</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnGhost} onPress={() => void refresh()}>
@@ -156,7 +162,11 @@ export default function TeamDetailScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity disabled={busy} style={styles.reviewBtn} onPress={() => void onTeamReview()}>
+          <TouchableOpacity
+            disabled={busy}
+            style={styles.reviewBtn}
+            onPress={() => void onTeamReview()}
+          >
             <Text style={styles.reviewBtnLabel}>今週のチーム振り返りを生成</Text>
           </TouchableOpacity>
         </>
@@ -208,7 +218,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   btnPrimaryLabel: { color: '#ffffff', fontWeight: '700' },
-  btnGhost: { borderRadius: 10, borderWidth: 1, borderColor: '#78716c', paddingVertical: 10, paddingHorizontal: 14 },
+  btnGhost: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#78716c',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
   btnGhostLabel: { color: '#78716c', fontWeight: '600' },
   disabled: { opacity: 0.55 },
   sectionTitle: { color: '#7c3aed', fontWeight: '700', marginTop: 8, fontSize: 13 },
@@ -225,9 +241,20 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.select({ ios: 10, android: 8 }),
     fontSize: 15,
   },
-  inviteBtn: { backgroundColor: '#c084fc', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
+  inviteBtn: {
+    backgroundColor: '#c084fc',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
   inviteBtnLabel: { color: '#ffffff', fontWeight: '700', fontSize: 13 },
-  reviewBtn: { marginVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#c084fc', paddingVertical: 10 },
+  reviewBtn: {
+    marginVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#c084fc',
+    paddingVertical: 10,
+  },
   reviewBtnLabel: { color: '#7c3aed', fontWeight: '600', textAlign: 'center' },
   memberRow: {
     flexDirection: 'row',

@@ -10,7 +10,10 @@ export async function listCategories(userId: string) {
   return categories.map(mapCategory);
 }
 
-export async function createCategory(userId: string, params: { name: string; color?: string | null }) {
+export async function createCategory(
+  userId: string,
+  params: { name: string; color?: string | null },
+) {
   const existing = await prisma.category.findUnique({
     where: { userId_name: { userId, name: params.name } },
   });

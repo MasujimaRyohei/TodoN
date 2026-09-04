@@ -63,7 +63,10 @@ export function CalendarClient() {
               <ul className="mt-1 space-y-1">
                 {day.tasks.slice(0, 3).map((t) => (
                   <li key={t.id}>
-                    <Link href={`/tasks/${t.id}`} className="text-xs font-semibold text-todon-primary hover:underline">
+                    <Link
+                      href={`/tasks/${t.id}`}
+                      className="text-xs font-semibold text-todon-primary hover:underline"
+                    >
                       {t.title}
                     </Link>
                   </li>

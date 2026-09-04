@@ -42,7 +42,12 @@ export function AppMobileMenu({ open, onClose }: AppMobileMenuProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[80] sm:hidden" role="dialog" aria-modal="true" aria-label="メニュー">
+    <div
+      className="fixed inset-0 z-[80] sm:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="メニュー"
+    >
       <button
         type="button"
         className="absolute inset-0 bg-stone-900/40 backdrop-blur-[1px]"
@@ -60,12 +65,16 @@ export function AppMobileMenu({ open, onClose }: AppMobileMenuProps) {
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <section className="mb-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">表示モード</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">
+              表示モード
+            </p>
             <ScopeSwitcherPanel layout="stacked" onNavigate={onClose} />
           </section>
 
           <section className="mb-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">メイン</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">
+              メイン
+            </p>
             <nav className="grid gap-1">
               {primaryNav.map((item) => (
                 <Link
@@ -86,14 +95,18 @@ export function AppMobileMenu({ open, onClose }: AppMobileMenuProps) {
                 mobile
                 onNavigate={onClose}
                 className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition ${
-                  pathname.startsWith('/teams') ? 'bg-todon-primary-soft text-todon-primary' : 'text-todon-ink hover:bg-stone-50'
+                  pathname.startsWith('/teams')
+                    ? 'bg-todon-primary-soft text-todon-primary'
+                    : 'text-todon-ink hover:bg-stone-50'
                 }`}
               />
             </nav>
           </section>
 
           <section className="mb-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">その他</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-todon-ink-muted">
+              その他
+            </p>
             <nav className="grid gap-1">
               {secondaryNav.map((item) => (
                 <Link

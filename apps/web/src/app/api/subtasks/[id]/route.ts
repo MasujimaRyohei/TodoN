@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { handleApiError } from '@/lib/api-utils';
-import { BadRequestError,requireUser } from '@/lib/http';
+import { BadRequestError, requireUser } from '@/lib/http';
 import { updateSubtaskSchema } from '@/lib/schemas';
 import { updateSubtask } from '@/server/tasks';
 

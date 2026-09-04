@@ -13,7 +13,9 @@ import {
 } from '@/lib/scope-preferences';
 
 function resolveScope(pathname: string): AppScope {
-  return scopeFromPathname(pathname) ?? readScopeFromCookie() ?? readAppScope() ?? { mode: 'personal' };
+  return (
+    scopeFromPathname(pathname) ?? readScopeFromCookie() ?? readAppScope() ?? { mode: 'personal' }
+  );
 }
 
 type TeamNavLinkProps = {
@@ -24,7 +26,9 @@ type TeamNavLinkProps = {
 
 export function TeamNavLink({ mobile = false, onNavigate, className }: TeamNavLinkProps) {
   const pathname = usePathname();
-  const [href, setHref] = useState<'/teams' | `/teams/${string}`>(() => teamNavHref(resolveScope(pathname)));
+  const [href, setHref] = useState<'/teams' | `/teams/${string}`>(() =>
+    teamNavHref(resolveScope(pathname)),
+  );
 
   useEffect(() => {
     function sync() {

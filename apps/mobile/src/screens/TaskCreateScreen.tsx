@@ -114,7 +114,10 @@ export default function TaskCreateScreen({ navigation }: Props) {
         taskId: task.id,
       });
     } catch (error) {
-      Alert.alert('作成に失敗', error instanceof Error ? error.message : 'もう一度お試しください。');
+      Alert.alert(
+        '作成に失敗',
+        error instanceof Error ? error.message : 'もう一度お試しください。',
+      );
     } finally {
       setLoading(false);
     }
@@ -129,7 +132,10 @@ export default function TaskCreateScreen({ navigation }: Props) {
   function selectTeamMode() {
     setScope('team');
     setAssigneeId('');
-    const firstId = presetTeamId && teams.some((t) => t.id === presetTeamId) ? presetTeamId : teams[0]?.id ?? '';
+    const firstId =
+      presetTeamId && teams.some((t) => t.id === presetTeamId)
+        ? presetTeamId
+        : (teams[0]?.id ?? '');
 
     setTeamId(firstId);
   }
@@ -144,31 +150,41 @@ export default function TaskCreateScreen({ navigation }: Props) {
           style={[styles.scopeChip, scope === 'personal' ? styles.scopeChipOn : undefined]}
           onPress={selectPersonal}
         >
-          <Text style={[styles.scopeLabel, scope === 'personal' ? styles.scopeLabelOn : undefined]}>個人</Text>
+          <Text style={[styles.scopeLabel, scope === 'personal' ? styles.scopeLabelOn : undefined]}>
+            個人
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.scopeChip, scope === 'team' ? styles.scopeChipOn : undefined]}
-          onPress={() => teams.length === 0 ? Alert.alert('チームがありません', 'チーム画面から作成してください。') : selectTeamMode()}
+          onPress={() =>
+            teams.length === 0
+              ? Alert.alert('チームがありません', 'チーム画面から作成してください。')
+              : selectTeamMode()
+          }
         >
-          <Text style={[styles.scopeLabel, scope === 'team' ? styles.scopeLabelOn : undefined]}>チーム</Text>
+          <Text style={[styles.scopeLabel, scope === 'team' ? styles.scopeLabelOn : undefined]}>
+            チーム
+          </Text>
         </TouchableOpacity>
       </View>
 
       {scope === 'team' ? (
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>チーム</Text>
-          {teams.filter((t) => t.id).map((team) => (
-            <TouchableOpacity
-              key={team.id}
-              style={[styles.teamPick, teamId === team.id ? styles.teamPickOn : undefined]}
-              onPress={() => {
-                setTeamId(team.id);
-                setAssigneeId('');
-              }}
-            >
-              <Text style={styles.teamPickLabel}>{team.name}</Text>
-            </TouchableOpacity>
-          ))}
+          {teams
+            .filter((t) => t.id)
+            .map((team) => (
+              <TouchableOpacity
+                key={team.id}
+                style={[styles.teamPick, teamId === team.id ? styles.teamPickOn : undefined]}
+                onPress={() => {
+                  setTeamId(team.id);
+                  setAssigneeId('');
+                }}
+              >
+                <Text style={styles.teamPickLabel}>{team.name}</Text>
+              </TouchableOpacity>
+            ))}
         </View>
       ) : null}
 
@@ -212,7 +228,11 @@ export default function TaskCreateScreen({ navigation }: Props) {
         onChangeText={setDescription}
       />
 
-      <TouchableOpacity style={[styles.button, loading ? styles.disabled : undefined]} onPress={() => void onSubmit()} disabled={loading}>
+      <TouchableOpacity
+        style={[styles.button, loading ? styles.disabled : undefined]}
+        onPress={() => void onSubmit()}
+        disabled={loading}
+      >
         <Text style={styles.buttonLabel}>{loading ? '送信中…' : '保存する'}</Text>
       </TouchableOpacity>
 

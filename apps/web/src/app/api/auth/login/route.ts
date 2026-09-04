@@ -40,7 +40,8 @@ export async function POST(req: Request) {
       const user = await upsertUserFromSupabase({
         supabaseId: data.user.id,
         email,
-        name: typeof data.user.user_metadata?.name === 'string' ? data.user.user_metadata.name : null,
+        name:
+          typeof data.user.user_metadata?.name === 'string' ? data.user.user_metadata.name : null,
       });
 
       const token = await signUserToken(user.id);

@@ -9,7 +9,11 @@ import { createProject, listProjects } from '@/server/projects';
 function scopeFromRequest(req: Request) {
   const cookie = req.headers.get('cookie') ?? '';
   const match = cookie.match(new RegExp(`${SCOPE_COOKIE_NAME}=([^;]+)`));
-  return parseScopeCookie(match?.[1] ? decodeURIComponent(match[1]) : null) ?? { mode: 'personal' as const };
+  return (
+    parseScopeCookie(match?.[1] ? decodeURIComponent(match[1]) : null) ?? {
+      mode: 'personal' as const,
+    }
+  );
 }
 
 export async function GET(req: Request) {
@@ -31,8 +35,7 @@ export async function POST(req: Request) {
     }
 
     const scope = scopeFromRequest(req);
-    const teamId =
-      payload.data.teamId ?? (scope.mode === 'team' ? scope.teamId : null);
+    const teamId = payload.data.teamId ?? (scope.mode === 'team' ? scope.teamId : null);
 
     const project = await createProject(userId, { ...payload.data, teamId });
     return NextResponse.json(project, { status: 201 });

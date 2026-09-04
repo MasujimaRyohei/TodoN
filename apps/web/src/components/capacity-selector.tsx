@@ -38,7 +38,9 @@ export function CapacitySelector({ initial }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="todon-section-label">今日のキャパシティ</p>
-          <p className="text-sm text-todon-ink-muted">だいたいリピートの表示量を、気分に合わせて調整</p>
+          <p className="text-sm text-todon-ink-muted">
+            だいたいリピートの表示量を、気分に合わせて調整
+          </p>
         </div>
         {saving ? <span className="text-xs font-bold text-todon-ink-muted">保存中…</span> : null}
       </div>

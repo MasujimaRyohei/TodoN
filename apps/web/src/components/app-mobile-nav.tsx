@@ -18,7 +18,9 @@ type AppMobileNavProps = {
 };
 
 function resolveScope(pathname: string): AppScope {
-  return scopeFromPathname(pathname) ?? readScopeFromCookie() ?? readAppScope() ?? { mode: 'personal' };
+  return (
+    scopeFromPathname(pathname) ?? readScopeFromCookie() ?? readAppScope() ?? { mode: 'personal' }
+  );
 }
 
 export function AppMobileNav({ onOpenMenu }: AppMobileNavProps) {

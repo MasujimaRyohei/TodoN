@@ -72,15 +72,27 @@ export function evaluateFlexibleRepeat(
   const busyDay = context.capacity === 'busy' || context.capacity === 'overload';
 
   if (busyDay && manyTasksToday && input.weight === 'light' && input.importance !== 'high') {
-    return { show: false, priority: 'low', reason: '今日のタスクが多いため、軽いリピートは明日に回せます' };
+    return {
+      show: false,
+      priority: 'low',
+      reason: '今日のタスクが多いため、軽いリピートは明日に回せます',
+    };
   }
 
   if (context.capacity === 'overload' && input.importance !== 'high' && input.urgency !== 'high') {
-    return { show: false, priority: 'low', reason: '今日は無理モードのため、最低限のタスクのみ表示しています' };
+    return {
+      show: false,
+      priority: 'low',
+      reason: '今日は無理モードのため、最低限のタスクのみ表示しています',
+    };
   }
 
   if (input.skipCount >= 2 && !nearMax && !pastMax) {
-    return { show: true, priority: 'medium', reason: '2回スキップされています。できれば今週前半に片付けましょう' };
+    return {
+      show: true,
+      priority: 'medium',
+      reason: '2回スキップされています。できれば今週前半に片付けましょう',
+    };
   }
 
   return { show: true, priority: 'medium', reason: 'だいたいの周期で今日の候補です' };

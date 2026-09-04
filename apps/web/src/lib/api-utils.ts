@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import {
-  BadRequestError,
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from '@/lib/http';
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from '@/lib/http';
 
 export function handleApiError(error: unknown) {
   if (error instanceof UnauthorizedError) {

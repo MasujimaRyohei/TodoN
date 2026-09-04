@@ -112,7 +112,10 @@ export function TeamsListClient({ initialTeams, invites }: Props) {
           <h2 className="text-sm font-semibold text-amber-900">保留中の招待</h2>
           <ul className="mt-3 space-y-2">
             {invites.map((invite) => (
-              <li key={invite.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <li
+                key={invite.id}
+                className="flex flex-wrap items-center justify-between gap-2 text-sm"
+              >
                 <span className="text-todon-ink">
                   {invite.teamName} への招待（{invite.email}）
                 </span>
@@ -128,7 +131,9 @@ export function TeamsListClient({ initialTeams, invites }: Props) {
       {error ? <p className="todon-error">{error}</p> : null}
 
       {teams.length === 0 ? (
-        <p className="todon-muted">まだチームがありません。作成するか、招待を受け取ってください。</p>
+        <p className="todon-muted">
+          まだチームがありません。作成するか、招待を受け取ってください。
+        </p>
       ) : (
         <ul className="space-y-3">
           {teams.map((team, index) => {
@@ -166,9 +171,12 @@ export function TeamsListClient({ initialTeams, invites }: Props) {
                     {teamDisplayIcon(team)}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-lg font-extrabold text-todon-ink">{team.name}</span>
+                    <span className="block truncate text-lg font-extrabold text-todon-ink">
+                      {team.name}
+                    </span>
                     <span className="text-xs text-todon-ink-muted">
-                      {team.myRole ? roleLabels[team.myRole] : '—'} / メンバー {team.memberCount ?? 1} 人
+                      {team.myRole ? roleLabels[team.myRole] : '—'} / メンバー{' '}
+                      {team.memberCount ?? 1} 人
                     </span>
                   </span>
                 </Link>

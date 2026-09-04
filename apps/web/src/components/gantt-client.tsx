@@ -45,7 +45,10 @@ export function GanttClient() {
           return (
             <div key={item.id} className="todon-card p-3">
               <div className="mb-2 flex justify-between gap-2 text-sm">
-                <Link href={`/tasks/${item.id}`} className="font-bold text-todon-ink hover:text-todon-primary">
+                <Link
+                  href={`/tasks/${item.id}`}
+                  className="font-bold text-todon-ink hover:text-todon-primary"
+                >
                   {item.title}
                 </Link>
                 <span className="text-xs text-todon-ink-muted">{item.status}</span>

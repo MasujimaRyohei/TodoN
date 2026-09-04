@@ -100,7 +100,10 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
 
   const duePayload = useMemo(() => {
     if (dueType !== 'datetime' || !dueAt) {
-      return { dueType: dueType === 'datetime' ? 'none' : dueType, dueAt: undefined as string | undefined };
+      return {
+        dueType: dueType === 'datetime' ? 'none' : dueType,
+        dueAt: undefined as string | undefined,
+      };
     }
 
     return { dueType: 'datetime' as const, dueAt: new Date(dueAt).toISOString() };
@@ -170,7 +173,9 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <label className="todon-label">タイトル（必須）</label>
           <div className="flex gap-2">
-            <VoiceInputButton onText={(text) => setTitle((prev) => (prev ? `${prev} ${text}` : text))} />
+            <VoiceInputButton
+              onText={(text) => setTitle((prev) => (prev ? `${prev} ${text}` : text))}
+            />
             <button
               type="button"
               className="todon-btn-ghost text-xs"
@@ -201,7 +206,9 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
                   body: JSON.stringify({ title }),
                 })
                   .then((r) => r.json())
-                  .then((body: { suggestions: string[] }) => setSubtaskHints(body.suggestions ?? []));
+                  .then((body: { suggestions: string[] }) =>
+                    setSubtaskHints(body.suggestions ?? []),
+                  );
               }}
             >
               サブタスク案
@@ -224,7 +231,11 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
               ))}
             </ul>
             <label className="mt-2 flex items-center gap-2 text-xs">
-              <input type="checkbox" checked={applySubtasks} onChange={(e) => setApplySubtasks(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={applySubtasks}
+                onChange={(e) => setApplySubtasks(e.target.checked)}
+              />
               作成時にサブタスクとして追加する
             </label>
           </div>
@@ -424,11 +435,7 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
       {error ? <p className="todon-error">{error}</p> : null}
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="todon-btn-primary disabled:opacity-50"
-        >
+        <button type="submit" disabled={loading} className="todon-btn-primary disabled:opacity-50">
           {loading ? '保存中…' : '作成する'}
         </button>
         <Link href="/tasks" className="todon-link">

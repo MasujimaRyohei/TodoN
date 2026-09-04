@@ -26,7 +26,10 @@ export default function RegisterScreen({ navigation }: Props) {
 
   async function onSubmit() {
     if (!baseUrl) {
-      Alert.alert('構成エラー', 'app.json の expo.extra.apiUrl か EXPO_PUBLIC_API_URL を設定してください。');
+      Alert.alert(
+        '構成エラー',
+        'app.json の expo.extra.apiUrl か EXPO_PUBLIC_API_URL を設定してください。',
+      );
 
       return;
     }
@@ -66,7 +69,12 @@ export default function RegisterScreen({ navigation }: Props) {
 
         <View style={styles.card}>
           <Text style={styles.label}>表示名（任意）</Text>
-          <TextInput style={styles.input} placeholder="山田太郎" value={name} onChangeText={setName} />
+          <TextInput
+            style={styles.input}
+            placeholder="山田太郎"
+            value={name}
+            onChangeText={setName}
+          />
 
           <Text style={[styles.label, styles.labelSpacing]}>メール</Text>
           <TextInput
@@ -80,7 +88,13 @@ export default function RegisterScreen({ navigation }: Props) {
           />
 
           <Text style={[styles.label, styles.labelSpacing]}>パスワード（8文字以上）</Text>
-          <TextInput secureTextEntry style={styles.input} placeholder="••••••••" value={password} onChangeText={setPassword} />
+          <TextInput
+            secureTextEntry
+            style={styles.input}
+            placeholder="••••••••"
+            value={password}
+            onChangeText={setPassword}
+          />
 
           <TouchableOpacity
             style={[styles.button, loading ? styles.disabled : undefined]}

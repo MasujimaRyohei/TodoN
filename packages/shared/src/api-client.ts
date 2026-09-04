@@ -287,7 +287,10 @@ export class TodoNApiClient {
   }
 
   createTemplate(body: { name: string; payload: TaskTemplatePayload }) {
-    return this.request<TaskTemplate>('/api/templates', { method: 'POST', body: JSON.stringify(body) });
+    return this.request<TaskTemplate>('/api/templates', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   deleteTemplate(id: string) {

@@ -1,4 +1,4 @@
-import { jwtVerify,SignJWT } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 const COOKIE_NAME = 'todon_token';
 

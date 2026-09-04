@@ -479,7 +479,9 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
                   checked={sub.completed}
                   onChange={() => void toggleSubtask(sub)}
                 />
-                <span className={sub.completed ? 'line-through text-todon-ink-muted' : ''}>{sub.title}</span>
+                <span className={sub.completed ? 'line-through text-todon-ink-muted' : ''}>
+                  {sub.title}
+                </span>
               </label>
             </li>
           ))}

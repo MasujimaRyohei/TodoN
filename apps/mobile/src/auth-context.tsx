@@ -43,7 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = React.useState<string | null>(null);
   const [hydrated, setHydrated] = React.useState(false);
 
-  const client = React.useMemo(() => new TodoNApiClient({ baseUrl, getToken: () => token }), [token, baseUrl]);
+  const client = React.useMemo(
+    () => new TodoNApiClient({ baseUrl, getToken: () => token }),
+    [token, baseUrl],
+  );
 
   React.useEffect(() => {
     let alive = true;

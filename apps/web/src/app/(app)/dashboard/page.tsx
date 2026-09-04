@@ -82,7 +82,9 @@ export default async function DashboardPage() {
 
       <section className="todon-section p-4">
         <p className="todon-section-label">ひとこと（ルールベース）</p>
-        <p className="mt-2 text-sm leading-relaxed font-medium text-todon-ink">{data.aiSuggestion}</p>
+        <p className="mt-2 text-sm leading-relaxed font-medium text-todon-ink">
+          {data.aiSuggestion}
+        </p>
       </section>
 
       <DashboardTaskBoard

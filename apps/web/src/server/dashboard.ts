@@ -1,7 +1,11 @@
 import type { Task as PrismaTask } from '@prisma/client';
 import type { AppScope } from '@/lib/scope-preferences';
 import type { DashboardPayload, FlexibleTaskView, Task } from '@todon/shared';
-import { buildDashboardSuggestion, computeTodayProgress, formatTodayDateLabel } from '@todon/shared';
+import {
+  buildDashboardSuggestion,
+  computeTodayProgress,
+  formatTodayDateLabel,
+} from '@todon/shared';
 
 import { endOfLocalDay, localDayKey, startOfLocalDay } from '@/lib/date';
 import { mapTask } from '@/lib/mappers';
@@ -144,7 +148,11 @@ async function buildPersonalDashboard(userId: string, nowInput: Date): Promise<D
   };
 }
 
-async function buildTeamDashboard(userId: string, teamId: string, nowInput: Date): Promise<DashboardPayload> {
+async function buildTeamDashboard(
+  userId: string,
+  teamId: string,
+  nowInput: Date,
+): Promise<DashboardPayload> {
   const team = await getTeamForUser(userId, teamId);
 
   const rows = await prisma.task.findMany({
@@ -226,7 +234,9 @@ function buildNotificationCandidates(
     push(t);
   }
 
-  for (const t of flexible.filter((f) => f.flexiblePriority === 'urgent' || f.flexiblePriority === 'high')) {
+  for (const t of flexible.filter(
+    (f) => f.flexiblePriority === 'urgent' || f.flexiblePriority === 'high',
+  )) {
     push(t);
   }
 

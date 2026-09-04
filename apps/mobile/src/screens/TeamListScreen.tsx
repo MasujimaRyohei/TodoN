@@ -101,10 +101,14 @@ export default function TeamListScreen({ navigation }: Props) {
         <FlatList
           data={teams}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           ListEmptyComponent={() => (
-            <Text style={styles.muted}>まだチームに参加していません。作成するか招待を受けてください。</Text>
+            <Text style={styles.muted}>
+              まだチームに参加していません。作成するか招待を受けてください。
+            </Text>
           )}
           contentContainerStyle={teams.length === 0 ? styles.emptyPad : styles.listPad}
           renderItem={({ item }) => (

@@ -10,7 +10,10 @@ export default async function TeamsPage() {
     redirect('/login');
   }
 
-  const [teams, invites] = await Promise.all([listTeamsForUser(userId), listPendingInvitesForUser(userId)]);
+  const [teams, invites] = await Promise.all([
+    listTeamsForUser(userId),
+    listPendingInvitesForUser(userId),
+  ]);
 
   return <TeamsListClient initialTeams={teams} invites={invites} />;
 }

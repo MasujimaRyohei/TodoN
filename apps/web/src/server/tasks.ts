@@ -11,7 +11,7 @@ import { buildRepeatCompletionPatch, repeatFieldsFromInput } from './tasks-share
 import { requireTaskAccess, requireTaskEdit } from './team-access';
 import { createTeamTask } from './team-tasks';
 
-export { buildRepeatCompletionPatch,repeatFieldsFromInput };
+export { buildRepeatCompletionPatch, repeatFieldsFromInput };
 
 export async function listTasks(userId: string, archived: boolean) {
   const rows = await prisma.task.findMany({

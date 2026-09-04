@@ -1,4 +1,4 @@
-import "./globals.css";
+import './globals.css';
 
 import { M_PLUS_Rounded_1c } from 'next/font/google';
 
@@ -31,10 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ja"
-      className={`${todonFont.variable} h-full antialiased`}
-    >
+    <html lang="ja" className={`${todonFont.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <div className="flex min-h-full flex-1 flex-col">{children}</div>
         <AppFooter />

@@ -1,4 +1,8 @@
-import type { Team as PrismaTeam, TeamInvite as PrismaInvite, TeamMember as PrismaMember } from '@prisma/client';
+import type {
+  Team as PrismaTeam,
+  TeamInvite as PrismaInvite,
+  TeamMember as PrismaMember,
+} from '@prisma/client';
 import type { Team, TeamInvite, TeamMember, TeamRole } from '@todon/shared';
 import { randomBytes } from 'crypto';
 
@@ -8,7 +12,9 @@ import { prisma } from '@/lib/prisma';
 
 import { isTeamRole, requireMembership, requireTeamAdmin, requireTeamOwner } from './team-access';
 
-function mapTeam(row: PrismaTeam & { _count?: { members: number }; members?: { role: string }[] }): Team {
+function mapTeam(
+  row: PrismaTeam & { _count?: { members: number }; members?: { role: string }[] },
+): Team {
   const myMembership = row.members?.[0];
 
   return {

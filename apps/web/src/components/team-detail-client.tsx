@@ -51,7 +51,11 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
         throw new Error((body as { message?: string }).message ?? '招待に失敗しました');
       }
 
-      const body = (await res.json()) as { type: string; member?: TeamMember; invite?: { token: string } };
+      const body = (await res.json()) as {
+        type: string;
+        member?: TeamMember;
+        invite?: { token: string };
+      };
 
       if (body.type === 'member' && body.member) {
         setMembers((prev) => [...prev, body.member!]);
@@ -145,7 +149,8 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
             <h1 className="todon-page-title">{team.name}</h1>
           </div>
           <p className="mt-1 text-xs text-todon-ink-muted">
-            あなたのロール: {team.myRole ? roleLabels[team.myRole] : '—'} / メンバー {team.memberCount ?? members.length} 人
+            あなたのロール: {team.myRole ? roleLabels[team.myRole] : '—'} / メンバー{' '}
+            {team.memberCount ?? members.length} 人
           </p>
         </div>
         <Link href="/teams" className="todon-link">
@@ -183,10 +188,7 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
       <section className="space-y-3 todon-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-extrabold text-todon-ink">チームタスク</h2>
-          <Link
-            href={`/tasks/new?teamId=${team.id}`}
-            className="todon-btn-primary text-xs"
-          >
+          <Link href={`/tasks/new?teamId=${team.id}`} className="todon-btn-primary text-xs">
             タスクを追加
           </Link>
         </div>
@@ -221,7 +223,9 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
               key={member.id}
               className="flex flex-wrap items-center justify-between gap-2 todon-card px-3 py-2 text-sm"
             >
-              <span className="text-todon-ink">{member.user?.name ?? member.user?.email ?? member.userId}</span>
+              <span className="text-todon-ink">
+                {member.user?.name ?? member.user?.email ?? member.userId}
+              </span>
               <span className="text-xs text-todon-ink-muted">{roleLabels[member.role]}</span>
             </li>
           ))}
@@ -250,7 +254,9 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
 
       <section className="todon-card p-5">
         <h2 className="text-lg font-extrabold text-todon-ink">チーム振り返り</h2>
-        <p className="mt-1 text-xs text-todon-ink-muted">今週のチームタスク状況から週次レポートを生成します</p>
+        <p className="mt-1 text-xs text-todon-ink-muted">
+          今週のチームタスク状況から週次レポートを生成します
+        </p>
         <button
           type="button"
           disabled={loading || !canAdmin}

@@ -10,7 +10,10 @@ function Row({ task }: { task: Task }) {
     <li className="todon-card px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <Link href={`/tasks/${task.id}`} className="text-sm font-semibold text-white hover:underline">
+          <Link
+            href={`/tasks/${task.id}`}
+            className="text-sm font-semibold text-white hover:underline"
+          >
             {task.title}
           </Link>
           <p className="text-xs text-todon-ink-muted">
