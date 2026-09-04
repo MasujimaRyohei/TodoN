@@ -1,17 +1,18 @@
-// One-off: link legacy bcrypt-only User rows to Supabase Auth accounts.
+// One-off ops for the legacy bcrypt -> Supabase Auth migration.
 //
-//   node --env-file=.env scripts/migrate-legacy-to-supabase.mjs          # dry run
-//   node --env-file=.env scripts/migrate-legacy-to-supabase.mjs --apply  # execute
+//   node --env-file=.env scripts/migrate-legacy-to-supabase.mjs                     # dry run: list legacy users
+//   node --env-file=.env scripts/migrate-legacy-to-supabase.mjs --apply             # create+link Supabase Auth users
+//   node --env-file=.env scripts/migrate-legacy-to-supabase.mjs --set-password <email> <newPassword>
 //
-// For every User with a passwordHash and no supabaseId it creates (or reuses) a
-// Supabase Auth user with the same email and sets User.supabaseId. bcrypt hashes
-// cannot be imported, so afterwards set each user's password in the Supabase
-// dashboard (Authentication -> Users -> ... -> Reset / Send recovery).
+// bcrypt hashes cannot be imported, so each migrated user needs a fresh password:
+// either via the Supabase dashboard (Authentication -> Users) or --set-password here.
 
 import { createClient } from '@supabase/supabase-js';
 import { PrismaClient } from '@prisma/client';
 
-const APPLY = process.argv.includes('--apply');
+const args = process.argv.slice(2);
+const APPLY = args.includes('--apply');
+const setPwIndex = args.indexOf('--set-password');
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,7 +27,6 @@ const admin = createClient(supabaseUrl, serviceKey, {
 const prisma = new PrismaClient();
 
 async function findAuthUserByEmail(email) {
-  // listUsers is paginated; these projects are tiny so a couple of pages is plenty.
   for (let page = 1; page <= 20; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw error;
@@ -37,9 +37,33 @@ async function findAuthUserByEmail(email) {
   return null;
 }
 
+async function setPassword() {
+  const email = args[setPwIndex + 1]?.toLowerCase();
+  const password = args[setPwIndex + 2];
+  if (!email || !password) {
+    throw new Error('usage: --set-password <email> <newPassword>');
+  }
+
+  const authUser = await findAuthUserByEmail(email);
+  if (!authUser) {
+    throw new Error(`no Supabase auth user for ${email}`);
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(authUser.id, {
+    password,
+    email_confirm: true,
+  });
+  if (error) throw new Error(`updateUserById failed: ${error.message}`);
+  console.log(`password updated for ${email}`);
+}
+
 async function main() {
-  // passwordHash is no longer in the Prisma schema (it is about to be dropped),
-  // so query it directly.
+  if (setPwIndex !== -1) {
+    await setPassword();
+    return;
+  }
+
+  // passwordHash is a nullable, otherwise-unused column; query it directly.
   const legacy = await prisma.$queryRaw`
     SELECT "id", "email", "name"
     FROM "User"
