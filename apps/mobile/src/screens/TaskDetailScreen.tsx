@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Task, TaskActivityLog, TaskComment, TaskWithPeople, TeamMember } from '@todon/shared';
+import { subtaskBudget } from '@todon/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -105,7 +106,7 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
       return '';
     }
 
-    return `${statusJp[task.status] ?? task.status} / ${task.importance} / ${task.urgency} / ${task.weight}`;
+    return `${statusJp[task.status] ?? task.status} / ${task.importance} / ${task.urgency} / ${task.weight} / ${task.points}pt`;
   }, [task]);
 
   async function toggleSubtask(subId: string, completed: boolean) {
@@ -200,6 +201,7 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
       : null;
 
   const isTeam = task.scope === 'team' && task.teamId;
+  const budget = subtaskBudget(task.points, task.subtasks ?? []);
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
@@ -335,6 +337,9 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
 
       <View style={styles.section}>
         <Text style={styles.sectionEyebrow}>サブタスク</Text>
+        <Text style={styles.badgeHint}>
+          配点 {budget.total}pt / 割当済み {budget.allocated} / 残り {budget.remaining}
+        </Text>
 
         {(task.subtasks ?? []).length === 0 ? (
           <Text style={styles.body}>サブタスクはまだありません</Text>
@@ -349,6 +354,7 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
               <View style={[styles.badge, sub.completed ? styles.badgeDone : styles.badgeOpen]}>
                 <Text style={[styles.badgeLabel, sub.completed ? styles.strikeLabel : undefined]}>
                   {sub.title}
+                  {sub.points > 0 ? ` (${sub.points}pt)` : ''}
                 </Text>
 
                 <Text style={styles.badgeHint}>{sub.completed ? '完了' : 'タップで切り替え'}</Text>
