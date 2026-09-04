@@ -12,6 +12,7 @@ model User {
   id            String         @id @default(cuid())
   supabaseId    String?        @unique
   email         String         @unique
+  passwordHash  String?        // legacy bcrypt auth (unused); dropped once new auth code is deployed everywhere
   name          String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

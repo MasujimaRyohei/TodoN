@@ -4,6 +4,6 @@ import next from '@tooling-configs/eslint-config/next';
 export default [
   ...next,
   {
-    ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**'],
+    ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**', 'scripts/**'],
   },
 ];
