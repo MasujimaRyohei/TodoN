@@ -15,7 +15,9 @@ export function TemplatesClient() {
   }
 
   useEffect(() => {
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, []);
 
   async function create() {
@@ -53,8 +55,18 @@ export function TemplatesClient() {
         }}
       >
         <p className="font-bold text-todon-ink">テンプレートを保存</p>
-        <input className="todon-input" placeholder="テンプレ名" value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="todon-input" placeholder="タスクタイトル" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          className="todon-input"
+          placeholder="テンプレ名"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          className="todon-input"
+          placeholder="タスクタイトル"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
         <button type="submit" className="todon-btn-primary">
           保存
         </button>
@@ -62,7 +74,10 @@ export function TemplatesClient() {
 
       <ul className="space-y-3">
         {templates.map((tpl) => (
-          <li key={tpl.id} className="todon-card flex flex-wrap items-center justify-between gap-3 p-4">
+          <li
+            key={tpl.id}
+            className="todon-card flex flex-wrap items-center justify-between gap-3 p-4"
+          >
             <div>
               <p className="font-bold text-todon-ink">{tpl.name}</p>
               <p className="text-sm text-todon-ink-muted">{tpl.payload.title}</p>
@@ -74,7 +89,11 @@ export function TemplatesClient() {
               >
                 使う
               </Link>
-              <button type="button" className="todon-btn-ghost text-xs" onClick={() => void remove(tpl.id)}>
+              <button
+                type="button"
+                className="todon-btn-ghost text-xs"
+                onClick={() => void remove(tpl.id)}
+              >
                 削除
               </button>
             </div>

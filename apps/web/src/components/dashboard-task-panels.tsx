@@ -2,9 +2,13 @@
 
 import type { FlexibleTaskView, Task, TaskWithPeople } from '@todon/shared';
 import Link from 'next/link';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useSyncExternalStore } from 'react';
 
-import { readHideEmptySections, writeHideEmptySections } from '@/lib/dashboard-preferences';
+import {
+  readHideEmptySections,
+  subscribeHideEmptySections,
+  writeHideEmptySections,
+} from '@/lib/dashboard-preferences';
 
 type PanelData = {
   myTeamTasks: TaskWithPeople[];
@@ -55,7 +59,10 @@ function FlexibleList({ tasks }: { tasks: FlexibleTaskView[] }) {
     <ul className="space-y-3">
       {tasks.map((task) => (
         <li key={task.id}>
-          <Link href={`/tasks/${task.id}`} className="todon-task-link border-todon-mint bg-todon-mint-soft/40">
+          <Link
+            href={`/tasks/${task.id}`}
+            className="todon-task-link border-todon-mint bg-todon-mint-soft/40"
+          >
             <div className="flex items-center justify-between gap-2">
               <p className="font-bold text-todon-ink">{task.title}</p>
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-todon-mint">
@@ -123,7 +130,9 @@ function HideEmptyToggle({
     <div className="todon-section flex flex-wrap items-center justify-between gap-4 p-4">
       <div>
         <p className="text-sm font-extrabold text-todon-ink">空のセクションを非表示</p>
-        <p className="text-xs text-todon-ink-muted">タスクがない枠を隠して、見る場所を絞り込みます</p>
+        <p className="text-xs text-todon-ink-muted">
+          タスクがない枠を隠して、見る場所を絞り込みます
+        </p>
       </div>
       <div className="flex items-center gap-3">
         <span
@@ -164,29 +173,39 @@ export function DashboardTaskBoard({
   footer?: ReactNode;
 }) {
   const isTeam = scopeMode === 'team';
-  const [hideEmpty, setHideEmpty] = useState(true);
-
-  useEffect(() => {
-    setHideEmpty(readHideEmptySections());
-  }, []);
-
-  function onToggleHideEmpty(next: boolean) {
-    setHideEmpty(next);
-    writeHideEmptySections(next);
-  }
+  const hideEmpty = useSyncExternalStore(
+    subscribeHideEmptySections,
+    readHideEmptySections,
+    () => true,
+  );
 
   const show = <T,>(tasks: T[]) => !hideEmpty || tasks.length > 0;
 
   const gridSections = [
-    { key: 'overdue', title: '期限切れ', description: 'すぐに手を付けたいタスク', tasks: data.overdue },
-    { key: 'dueToday', title: '今日が期限', description: '今日中に片付けたいタスク', tasks: data.dueToday },
+    {
+      key: 'overdue',
+      title: '期限切れ',
+      description: 'すぐに手を付けたいタスク',
+      tasks: data.overdue,
+    },
+    {
+      key: 'dueToday',
+      title: '今日が期限',
+      description: '今日中に片付けたいタスク',
+      tasks: data.dueToday,
+    },
     {
       key: 'dueSoon',
       title: '近日中の期限（7日以内）',
       description: 'そろそろ着手しておきたいタスク',
       tasks: data.dueSoon,
     },
-    { key: 'inProgress', title: '着手中', description: '今まさに進めているもの', tasks: data.inProgress },
+    {
+      key: 'inProgress',
+      title: '着手中',
+      description: '今まさに進めているもの',
+      tasks: data.inProgress,
+    },
     {
       key: 'highPriorityOpen',
       title: '重要度が高い未完了',
@@ -206,7 +225,9 @@ export function DashboardTaskBoard({
       {show(data.myTeamTasks) ? (
         <Section
           title={isTeam ? '自分の担当タスク' : '担当のチームタスク'}
-          description={isTeam ? 'このチームで自分が担当している未完了タスク' : '自分が担当している未完了タスク'}
+          description={
+            isTeam ? 'このチームで自分が担当している未完了タスク' : '自分が担当している未完了タスク'
+          }
         >
           <TeamTaskList tasks={data.myTeamTasks} />
         </Section>
@@ -236,7 +257,7 @@ export function DashboardTaskBoard({
 
       {footer}
 
-      <HideEmptyToggle enabled={hideEmpty} onChange={onToggleHideEmpty} />
+      <HideEmptyToggle enabled={hideEmpty} onChange={writeHideEmptySections} />
     </div>
   );
 }

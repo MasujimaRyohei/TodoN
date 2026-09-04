@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
 import { handleApiError } from '@/lib/api-utils';
@@ -29,7 +28,9 @@ export async function POST(req: Request) {
       throw new BadRequestError('入力内容を確認してください');
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: payload.data.email.toLowerCase() } });
+    const existing = await prisma.user.findUnique({
+      where: { email: payload.data.email.toLowerCase() },
+    });
     if (existing) {
       throw new BadRequestError('このメールアドレスはすでに使われています');
     }

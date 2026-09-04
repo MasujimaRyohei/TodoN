@@ -31,7 +31,10 @@ function emptyBucket(): Bucket {
   return { allTime: 0, month: 0, week: 0, today: 0 };
 }
 
-export async function getTeamMemberPoints(userId: string, teamId: string): Promise<TeamPointsPayload> {
+export async function getTeamMemberPoints(
+  userId: string,
+  teamId: string,
+): Promise<TeamPointsPayload> {
   await requireMembership(userId, teamId);
 
   const now = new Date();
@@ -68,7 +71,7 @@ export async function getTeamMemberPoints(userId: string, teamId: string): Promi
 
   for (const row of completions) {
     const bucket = buckets.get(row.userId) ?? emptyBucket();
-    const points = row.points ?? row.task.points;
+    const points = row.task.points;
     const at = row.createdAt;
 
     bucket.allTime += points;

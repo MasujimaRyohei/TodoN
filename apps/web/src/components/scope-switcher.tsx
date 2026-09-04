@@ -4,52 +4,47 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { ScopeSwitcherPanel } from '@/components/scope-switcher-panel';
-import {
-  type AppScope,
-  persistAppScope,
-  readAppScope,
-  readScopeFromCookie,
-  scopeFromPathname,
-  teamDisplayIcon,
-} from '@/lib/scope-preferences';
+import { persistAppScope, scopeFromPathname, teamDisplayIcon } from '@/lib/scope-preferences';
+import { useAppScope } from '@/lib/use-app-scope';
 
 export function ScopeSwitcher() {
   const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const scope = useAppScope(pathname);
   const [open, setOpen] = useState(false);
-  const [scope, setScope] = useState<AppScope>({ mode: 'personal' });
   const [activeTeamName, setActiveTeamName] = useState<string | null>(null);
   const [activeTeamIcon, setActiveTeamIcon] = useState<string | null>(null);
 
   useEffect(() => {
     const fromPath = scopeFromPathname(pathname);
-    const fromCookie = readScopeFromCookie();
-    const stored = readAppScope();
-    const next = fromPath ?? fromCookie ?? stored ?? { mode: 'personal' };
-    setScope(next);
-    persistAppScope(next);
+    if (fromPath) {
+      persistAppScope(fromPath);
+    }
   }, [pathname]);
 
   useEffect(() => {
-    if (scope.mode !== 'team' || !scope.teamId) {
-      setActiveTeamName(null);
-      setActiveTeamIcon(null);
-      return;
-    }
+    void (async () => {
+      if (scope.mode !== 'team' || !scope.teamId) {
+        setActiveTeamName(null);
+        setActiveTeamIcon(null);
+        return;
+      }
 
-    void fetch('/api/teams', { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((teams: Array<{ id: string; name: string; icon?: string | null }>) => {
+      try {
+        const res = await fetch('/api/teams', { credentials: 'include' });
+        const teams: Array<{ id: string; name: string; icon?: string | null }> = res.ok
+          ? await res.json()
+          : [];
         const team = teams.find((item) => item.id === scope.teamId);
         setActiveTeamName(team?.name ?? scope.teamName ?? 'T');
         setActiveTeamIcon(team?.icon ?? scope.teamIcon ?? null);
-      })
-      .catch(() => {
+      } catch {
         setActiveTeamName(scope.teamName ?? 'T');
         setActiveTeamIcon(scope.teamIcon ?? null);
-      });
-  }, [pathname, scope]);
+      }
+    })();
+  }, [scope]);
 
   useEffect(() => {
     if (!open) {

@@ -2,7 +2,14 @@
 
 import type { CapacityLevel, DashboardTodayProgress } from '@todon/shared';
 import { CAPACITY_LABELS } from '@todon/shared';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
+
+const CLOCK_TICK_MS = 1000;
+
+function subscribeToClock(onTick: () => void) {
+  const id = window.setInterval(onTick, CLOCK_TICK_MS);
+  return () => window.clearInterval(id);
+}
 
 function formatClock(now: Date, timeZone: string) {
   return new Intl.DateTimeFormat('ja-JP', {
@@ -23,13 +30,11 @@ type Props = {
 };
 
 export function DashboardTodayHero({ dateLabel, dayKey, timeZone, capacity, progress }: Props) {
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  const clockLabel = useSyncExternalStore(
+    subscribeToClock,
+    () => formatClock(new Date(), timeZone),
+    () => null,
+  );
 
   const { total, completed, remaining, percent, dueTodayTotal, flexibleTotal } = progress;
   const allDone = total > 0 && remaining === 0;
@@ -51,9 +56,14 @@ export function DashboardTodayHero({ dateLabel, dayKey, timeZone, capacity, prog
             <p className="mt-1 text-xs font-medium text-todon-ink-muted">{dayKey}</p>
           </div>
           <div className="text-right">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-todon-ink-muted">現在時刻</p>
-            <p className="font-mono text-3xl font-extrabold tabular-nums text-todon-ink" suppressHydrationWarning>
-              {now ? formatClock(now, timeZone) : '--:--:--'}
+            <p className="text-[11px] font-bold uppercase tracking-wider text-todon-ink-muted">
+              現在時刻
+            </p>
+            <p
+              className="font-mono text-3xl font-extrabold tabular-nums text-todon-ink"
+              suppressHydrationWarning
+            >
+              {clockLabel ?? '--:--:--'}
             </p>
             <p className="text-[11px] text-todon-ink-muted">{timeZone}</p>
           </div>

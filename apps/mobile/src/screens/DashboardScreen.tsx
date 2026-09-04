@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, backgroundColor: '#fff8f0', alignItems: 'center', justifyContent: 'center' },
   scroll: { padding: 20, gap: 12, backgroundColor: '#fff8f0' },
   title: { color: '#3f2f2a', fontSize: 24, fontWeight: '700' },
+  sectionTitle: { color: '#3f2f2a', fontSize: 16, fontWeight: '700', marginTop: 8 },
   sub: { color: '#78716c', fontSize: 13 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
