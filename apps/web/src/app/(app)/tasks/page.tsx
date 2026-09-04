@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation';
 
 import { getCurrentUserId } from '@/lib/auth/session';
 import { getValidatedServerAppScope } from '@/lib/scope-server';
-import { teamDisplayIcon } from '@/lib/scope-preferences';
 import { listTasks } from '@/server/tasks';
 import { listTeamTasks } from '@/server/team-tasks';
 import { getTeamForUser } from '@/server/teams';

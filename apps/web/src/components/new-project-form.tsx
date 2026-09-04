@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 type Props = {
@@ -45,7 +45,13 @@ export function NewProjectForm({ teamId, teamName }: Props) {
         </h1>
       </div>
       <form onSubmit={(e) => void onSubmit(e)} className="todon-card space-y-4 p-6">
-        <input className="todon-input" placeholder="名前" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input
+          className="todon-input"
+          placeholder="名前"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <textarea
           className="todon-input min-h-[100px]"
           placeholder="説明（任意）"

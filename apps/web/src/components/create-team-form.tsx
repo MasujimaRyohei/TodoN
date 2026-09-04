@@ -79,11 +79,7 @@ export function CreateTeamForm() {
       {error ? <p className="todon-error">{error}</p> : null}
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="todon-btn-primary disabled:opacity-50"
-        >
+        <button type="submit" disabled={loading} className="todon-btn-primary disabled:opacity-50">
           {loading ? '作成中…' : '作成する'}
         </button>
         <Link href="/teams" className="todon-link">

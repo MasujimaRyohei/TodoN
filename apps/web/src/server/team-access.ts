@@ -1,11 +1,25 @@
 import type { Task as PrismaTask } from '@prisma/client';
-import type { TeamRole } from '@todon/shared';
+import { isTeamRole, roleMeetsMinimum } from '@todon/shared';
 
 import { ForbiddenError, NotFoundError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
 
-export function isTeamRole(value: string): value is TeamRole {
-  return value === 'owner' || value === 'admin' || value === 'member';
+export { isTeamRole, roleMeetsMinimum };
+
+/** チーム主タスクの作成・ポイント設定に必要な権限を確認する。 */
+export async function requireMainTaskCreator(userId: string, teamId: string) {
+  const membership = await requireMembership(userId, teamId);
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { mainTaskCreateRole: true },
+  });
+
+  const minimum = team && isTeamRole(team.mainTaskCreateRole) ? team.mainTaskCreateRole : 'admin';
+  if (!roleMeetsMinimum(membership.role, minimum)) {
+    throw new ForbiddenError('メインタスクを作成する権限がありません');
+  }
+
+  return membership;
 }
 
 export async function getMembership(userId: string, teamId: string) {

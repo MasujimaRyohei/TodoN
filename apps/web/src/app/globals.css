@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --todon-bg: #fff8f0;
@@ -49,7 +49,7 @@
 body {
   background: var(--todon-bg);
   color: var(--todon-ink);
-  font-family: var(--font-todon), "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+  font-family: var(--font-todon), 'Hiragino Maru Gothic ProN', 'Yu Gothic UI', sans-serif;
 }
 
 /* 装飾ブロブ（認証・メイン背景） */
@@ -172,7 +172,9 @@ body {
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   color: var(--todon-ink);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .todon-input:focus {
@@ -199,7 +201,9 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--todon-ink-muted);
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .todon-password-toggle:hover {
@@ -215,7 +219,9 @@ body {
   font-weight: 800;
   color: #fff;
   box-shadow: 0 8px 20px -6px rgba(249, 115, 22, 0.55);
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 
 .todon-btn-primary:hover:not(:disabled) {
@@ -235,7 +241,9 @@ body {
   font-size: 0.8125rem;
   font-weight: 700;
   color: var(--todon-ink-muted);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .todon-btn-ghost:hover {
@@ -259,7 +267,10 @@ body {
   border: 2px solid var(--todon-border);
   background: #fff;
   padding: 0.875rem 1rem;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .todon-task-link:hover {
@@ -299,7 +310,9 @@ body {
   border-left: none;
   background: #fff;
   box-shadow: 0 8px 24px -12px rgba(63, 47, 42, 0.25);
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .scope-switcher-trigger:hover {
@@ -397,7 +410,9 @@ body {
   border: 1px solid transparent;
   padding: 0.5rem 0.625rem;
   text-align: center;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .scope-switcher-team-chip:hover {
@@ -437,7 +452,9 @@ body {
   font-weight: 700;
   color: var(--todon-ink-muted);
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .scope-switcher-team-list-link:hover {

@@ -1,11 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type {
-  Task,
-  TaskActivityLog,
-  TaskComment,
-  TaskWithPeople,
-  TeamMember,
-} from '@todon/shared';
+import type { Task, TaskActivityLog, TaskComment, TaskWithPeople, TeamMember } from '@todon/shared';
+import { subtaskBudget } from '@todon/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -111,7 +106,7 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
       return '';
     }
 
-    return `${statusJp[task.status] ?? task.status} / ${task.importance} / ${task.urgency} / ${task.weight}`;
+    return `${statusJp[task.status] ?? task.status} / ${task.importance} / ${task.urgency} / ${task.weight} / ${task.points}pt`;
   }, [task]);
 
   async function toggleSubtask(subId: string, completed: boolean) {
@@ -200,10 +195,13 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
 
   const progress =
     task.subtasks && task.subtasks.length > 0
-      ? Math.round((task.subtasks.filter((sub) => sub.completed).length / task.subtasks.length) * 100)
+      ? Math.round(
+          (task.subtasks.filter((sub) => sub.completed).length / task.subtasks.length) * 100,
+        )
       : null;
 
   const isTeam = task.scope === 'team' && task.teamId;
+  const budget = subtaskBudget(task.points, task.subtasks ?? []);
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
@@ -213,7 +211,9 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
       {isTeam ? (
         <View style={styles.teamBanner}>
           <Text style={styles.teamBannerText}>チームタスク</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('TeamDetail', { teamId: task.teamId! })}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('TeamDetail', { teamId: task.teamId! })}
+          >
             <Text style={styles.teamBannerLink}>チーム画面へ</Text>
           </TouchableOpacity>
         </View>
@@ -231,9 +231,7 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
       {isTeam ? (
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>協業</Text>
-          <Text style={styles.meta}>
-            オーナー: {task.owner?.name ?? task.owner?.email ?? '—'}
-          </Text>
+          <Text style={styles.meta}>オーナー: {task.owner?.name ?? task.owner?.email ?? '—'}</Text>
           <Text style={styles.meta}>
             担当: {task.assignee?.name ?? task.assignee?.email ?? '未割当'}
           </Text>
@@ -311,7 +309,9 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
 
       <View style={styles.section}>
         <Text style={styles.sectionEyebrow}>詳細</Text>
-        <Text style={styles.body}>{task.description?.trim() ? task.description : '（詳細なし）'}</Text>
+        <Text style={styles.body}>
+          {task.description?.trim() ? task.description : '（詳細なし）'}
+        </Text>
 
         <Text style={styles.meta}>
           {task.dueAt
@@ -321,7 +321,9 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
         </Text>
 
         {task.archivedAt ? (
-          <Text style={styles.meta}>アーカイブ: {new Date(task.archivedAt).toLocaleString('ja-JP')}</Text>
+          <Text style={styles.meta}>
+            アーカイブ: {new Date(task.archivedAt).toLocaleString('ja-JP')}
+          </Text>
         ) : null}
 
         {task.deletedAt ? (
@@ -335,6 +337,9 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
 
       <View style={styles.section}>
         <Text style={styles.sectionEyebrow}>サブタスク</Text>
+        <Text style={styles.badgeHint}>
+          配点 {budget.total}pt / 割当済み {budget.allocated} / 残り {budget.remaining}
+        </Text>
 
         {(task.subtasks ?? []).length === 0 ? (
           <Text style={styles.body}>サブタスクはまだありません</Text>
@@ -347,7 +352,10 @@ export default function TaskDetailScreen({ route, navigation }: Props) {
               onPress={() => void toggleSubtask(sub.id, !sub.completed)}
             >
               <View style={[styles.badge, sub.completed ? styles.badgeDone : styles.badgeOpen]}>
-                <Text style={[styles.badgeLabel, sub.completed ? styles.strikeLabel : undefined]}>{sub.title}</Text>
+                <Text style={[styles.badgeLabel, sub.completed ? styles.strikeLabel : undefined]}>
+                  {sub.title}
+                  {sub.points > 0 ? ` (${sub.points}pt)` : ''}
+                </Text>
 
                 <Text style={styles.badgeHint}>{sub.completed ? '完了' : 'タップで切り替え'}</Text>
               </View>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { handleApiError } from '@/lib/api-utils';
-import { BadRequestError,requireUser } from '@/lib/http';
+import { BadRequestError, requireUser } from '@/lib/http';
 import { createCategorySchema } from '@/lib/schemas';
 import { createCategory, listCategories } from '@/server/categories';
 

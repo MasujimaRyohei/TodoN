@@ -8,12 +8,11 @@ import { useEffect, useState } from 'react';
 import {
   type AppScope,
   persistAppScope,
-  readAppScope,
-  readScopeFromCookie,
   scopedHomePath,
   scopeFromPathname,
   teamDisplayIcon,
 } from '@/lib/scope-preferences';
+import { useAppScope } from '@/lib/use-app-scope';
 
 type ScopeSwitcherPanelProps = {
   onNavigate?: () => void;
@@ -23,24 +22,27 @@ type ScopeSwitcherPanelProps = {
 export function ScopeSwitcherPanel({ onNavigate, layout = 'flyout' }: ScopeSwitcherPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const scope = useAppScope(pathname);
   const [teamOpen, setTeamOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [scope, setScope] = useState<AppScope>({ mode: 'personal' });
 
   useEffect(() => {
     const fromPath = scopeFromPathname(pathname);
-    const fromCookie = readScopeFromCookie();
-    const stored = readAppScope();
-    const next = fromPath ?? fromCookie ?? stored ?? { mode: 'personal' };
-    setScope(next);
-    persistAppScope(next);
+    if (fromPath) {
+      persistAppScope(fromPath);
+    }
   }, [pathname]);
 
   useEffect(() => {
-    void fetch('/api/teams', { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: Team[]) => setTeams(Array.isArray(data) ? data : []))
-      .catch(() => setTeams([]));
+    void (async () => {
+      try {
+        const res = await fetch('/api/teams', { credentials: 'include' });
+        const data: Team[] = res.ok ? await res.json() : [];
+        setTeams(Array.isArray(data) ? data : []);
+      } catch {
+        setTeams([]);
+      }
+    })();
   }, [pathname]);
 
   const activeTeam =
@@ -52,9 +54,7 @@ export function ScopeSwitcherPanel({ onNavigate, layout = 'flyout' }: ScopeSwitc
   }
 
   function selectPersonal() {
-    const next: AppScope = { mode: 'personal' };
-    persistAppScope(next);
-    setScope(next);
+    persistAppScope({ mode: 'personal' });
     finishNavigation();
     router.push(scopedHomePath(pathname));
     router.refresh();
@@ -68,7 +68,6 @@ export function ScopeSwitcherPanel({ onNavigate, layout = 'flyout' }: ScopeSwitc
       teamIcon: team.icon,
     };
     persistAppScope(next);
-    setScope(next);
     finishNavigation();
     router.push(scopedHomePath(pathname));
     router.refresh();
@@ -106,7 +105,10 @@ export function ScopeSwitcherPanel({ onNavigate, layout = 'flyout' }: ScopeSwitc
         </button>
 
         {teamOpen ? (
-          <div className={stacked ? 'scope-switcher-team-stacked' : 'scope-switcher-team-flyout'} role="menu">
+          <div
+            className={stacked ? 'scope-switcher-team-stacked' : 'scope-switcher-team-flyout'}
+            role="menu"
+          >
             <div className="scope-switcher-team-chips">
               {teams.length === 0 ? (
                 <p className="scope-switcher-empty">参加中のチームがありません</p>

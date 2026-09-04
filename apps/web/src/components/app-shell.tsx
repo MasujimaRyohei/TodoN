@@ -16,7 +16,9 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <>
       <AppHeader onOpenMobileMenu={() => setMenuOpen(true)} />
-      <main className="relative mx-auto w-full max-w-5xl px-4 py-6 pb-28 sm:py-8 sm:pb-8 sm:pl-14">{children}</main>
+      <main className="relative mx-auto w-full max-w-5xl px-4 py-6 pb-28 sm:py-8 sm:pb-8 sm:pl-14">
+        {children}
+      </main>
       <AppMobileNav onOpenMenu={() => setMenuOpen(true)} />
       <AppMobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>

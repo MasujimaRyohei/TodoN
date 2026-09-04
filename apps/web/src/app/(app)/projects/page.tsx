@@ -59,7 +59,10 @@ export default async function ProjectsPage() {
         <ul className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
             <li key={p.id}>
-              <Link href={`/projects/${p.id}`} className="todon-card block p-5 transition hover:border-todon-sky">
+              <Link
+                href={`/projects/${p.id}`}
+                className="todon-card block p-5 transition hover:border-todon-sky"
+              >
                 <p className="font-extrabold text-todon-ink">{p.name}</p>
                 <p className="text-xs text-todon-ink-muted">タスク {p.taskCount ?? 0} 件</p>
               </Link>

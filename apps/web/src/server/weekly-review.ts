@@ -35,7 +35,11 @@ type WeekStats = {
   byCategory: Record<string, number>;
 };
 
-async function collectWeekStats(userId: string, weekStart: Date, weekEnd: Date): Promise<WeekStats> {
+async function collectWeekStats(
+  userId: string,
+  weekStart: Date,
+  weekEnd: Date,
+): Promise<WeekStats> {
   const tasks = await prisma.task.findMany({
     where: {
       userId,
@@ -109,8 +113,7 @@ function buildReviewText(stats: WeekStats, prev?: WeekStats) {
   const insights: string[] = [];
   const recommendations: string[] = [];
 
-  const completedDelta =
-    prev != null ? stats.completed - prev.completed : null;
+  const completedDelta = prev != null ? stats.completed - prev.completed : null;
 
   if (completedDelta != null && completedDelta > 0) {
     insights.push(`完了タスク数は先週より ${completedDelta} 件増えています。`);
@@ -120,17 +123,23 @@ function buildReviewText(stats: WeekStats, prev?: WeekStats) {
 
   if (stats.highImportanceOpen > 0) {
     insights.push(`重要度が高い未完了タスクが ${stats.highImportanceOpen} 件残っています。`);
-    recommendations.push('来週は週の前半に、重要度が高いタスクを1つだけ進める時間を確保しましょう。');
+    recommendations.push(
+      '来週は週の前半に、重要度が高いタスクを1つだけ進める時間を確保しましょう。',
+    );
   }
 
   if (stats.flexibleSkipped >= 2) {
-    insights.push(`だいたいリピートのタスクが合計 ${stats.flexibleSkipped} 回スキップされています。`);
+    insights.push(
+      `だいたいリピートのタスクが合計 ${stats.flexibleSkipped} 回スキップされています。`,
+    );
     recommendations.push('週の前半に、軽い片付けタスクを15分だけ入れてみましょう。');
   }
 
   if (stats.pending >= 3) {
     insights.push(`保留タスクが ${stats.pending} 件あります。`);
-    recommendations.push('保留の理由をメモし、次のアクションを1行だけ書き足すと進みやすくなります。');
+    recommendations.push(
+      '保留の理由をメモし、次のアクションを1行だけ書き足すと進みやすくなります。',
+    );
   }
 
   if (stats.anytimeOpen >= 5) {
@@ -140,11 +149,15 @@ function buildReviewText(stats: WeekStats, prev?: WeekStats) {
 
   const topCategory = Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1])[0];
   if (topCategory) {
-    insights.push(`もっともタスクが多いカテゴリは「${topCategory[0]}」です（${topCategory[1]} 件）。`);
+    insights.push(
+      `もっともタスクが多いカテゴリは「${topCategory[0]}」です（${topCategory[1]} 件）。`,
+    );
   }
 
   if (recommendations.length === 0) {
-    recommendations.push('今週のペースを維持しつつ、重いタスクは午前中に1つだけ配置してみましょう。');
+    recommendations.push(
+      '今週のペースを維持しつつ、重いタスクは午前中に1つだけ配置してみましょう。',
+    );
   }
 
   const summary =
@@ -155,7 +168,11 @@ function buildReviewText(stats: WeekStats, prev?: WeekStats) {
   return { summary, insights, recommendations };
 }
 
-async function collectTeamWeekStats(teamId: string, weekStart: Date, weekEnd: Date): Promise<WeekStats & { unassigned: number }> {
+async function collectTeamWeekStats(
+  teamId: string,
+  weekStart: Date,
+  weekEnd: Date,
+): Promise<WeekStats & { unassigned: number }> {
   const tasks = await prisma.task.findMany({
     where: {
       teamId,
@@ -296,7 +313,9 @@ export async function generateTeamWeeklyReview(userId: string, teamId: string, n
 
   if (stats.unassigned > 0) {
     insights.push(`担当者未設定のタスクが ${stats.unassigned} 件あります。`);
-    recommendations.push('新規タスク作成時に担当者を必ず割り当てる習慣をつけると進行が速くなります。');
+    recommendations.push(
+      '新規タスク作成時に担当者を必ず割り当てる習慣をつけると進行が速くなります。',
+    );
   }
 
   if (stats.pending >= 3) {

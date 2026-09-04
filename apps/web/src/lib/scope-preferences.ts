@@ -4,6 +4,7 @@ export type AppScope =
 
 export const SCOPE_STORAGE_KEY = 'todon:app-scope';
 export const SCOPE_COOKIE_NAME = 'todon_scope';
+export const SCOPE_CHANGE_EVENT = 'todon:scope-change';
 
 export function parseScopeCookie(raw: string | undefined | null): AppScope | null {
   if (!raw || raw === 'personal') {
@@ -40,7 +41,7 @@ export function persistAppScope(scope: AppScope) {
 
   writeAppScope(scope);
   document.cookie = `${SCOPE_COOKIE_NAME}=${serializeScopeCookie(scope)}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-  window.dispatchEvent(new CustomEvent('todon:scope-change', { detail: scope }));
+  window.dispatchEvent(new CustomEvent(SCOPE_CHANGE_EVENT, { detail: scope }));
 }
 
 export function scopedHomePath(pathname: string): '/dashboard' | '/tasks' | '/projects' {

@@ -11,8 +11,13 @@ export async function GET(req: Request) {
     const { userId } = await requireUser(req);
     const cookie = req.headers.get('cookie') ?? '';
     const match = cookie.match(new RegExp(`${SCOPE_COOKIE_NAME}=([^;]+)`));
-    const scope = parseScopeCookie(match?.[1] ? decodeURIComponent(match[1]) : null) ?? { mode: 'personal' as const };
-    const { scope: validated, scopeInvalidated: invalidated } = await resolveAppScopeForUser(userId, scope);
+    const scope = parseScopeCookie(match?.[1] ? decodeURIComponent(match[1]) : null) ?? {
+      mode: 'personal' as const,
+    };
+    const { scope: validated, scopeInvalidated: invalidated } = await resolveAppScopeForUser(
+      userId,
+      scope,
+    );
 
     const dash = await buildDashboard(userId, validated);
     const res = NextResponse.json(dash);

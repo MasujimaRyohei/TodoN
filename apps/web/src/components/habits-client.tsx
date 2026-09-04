@@ -19,7 +19,9 @@ export function HabitsClient() {
   }
 
   useEffect(() => {
-    void load();
+    void (async () => {
+      await load();
+    })();
   }, []);
 
   async function create() {
@@ -84,7 +86,10 @@ export function HabitsClient() {
           <li className="todon-muted">習慣はまだありません</li>
         ) : (
           habits.map((h) => (
-            <li key={h.id} className="todon-card flex flex-wrap items-center justify-between gap-3 p-4">
+            <li
+              key={h.id}
+              className="todon-card flex flex-wrap items-center justify-between gap-3 p-4"
+            >
               <div>
                 <p className="font-bold text-todon-ink">{h.title}</p>
                 <p className="text-xs text-todon-ink-muted">

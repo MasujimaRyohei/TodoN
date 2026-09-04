@@ -15,10 +15,7 @@ export async function getCalendarRange(userId: string, start: Date, end: Date) {
       userId,
       deletedAt: null,
       archivedAt: null,
-      OR: [
-        { dueAt: { gte: start, lte: end } },
-        { startAt: { gte: start, lte: end } },
-      ],
+      OR: [{ dueAt: { gte: start, lte: end } }, { startAt: { gte: start, lte: end } }],
     },
     include: taskInclude,
     orderBy: { dueAt: 'asc' },
@@ -80,19 +77,17 @@ export function buildIcsFeed(
   userEmail: string,
   tasks: { title: string; dueAt: Date | null; description: string | null }[],
 ) {
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//TodoN//JP',
-    'CALSCALE:GREGORIAN',
-  ];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//TodoN//JP', 'CALSCALE:GREGORIAN'];
 
   for (const task of tasks) {
     if (!task.dueAt) {
       continue;
     }
 
-    const stamp = task.dueAt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
+    const stamp = task.dueAt
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}Z/, 'Z');
     const uid = `${stamp}-${task.title.slice(0, 8)}@todon`;
 
     lines.push('BEGIN:VEVENT');

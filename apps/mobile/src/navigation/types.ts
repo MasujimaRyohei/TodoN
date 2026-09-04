@@ -10,6 +10,6 @@ export type AppStackParamList = {
   TeamCreate: undefined;
   TeamDetail: { teamId: string };
   JoinInvite: undefined;
-  TaskCreate: { teamId?: string };
+  TaskCreate: { teamId?: string } | undefined;
   TaskDetail: { taskId: string };
 };

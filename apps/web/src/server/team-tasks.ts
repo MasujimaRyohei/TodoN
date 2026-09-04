@@ -1,5 +1,6 @@
 import type { Task } from '@todon/shared';
 import type { RepeatType } from '@todon/shared';
+import { resolveTaskPoints } from '@todon/shared';
 
 import { BadRequestError, ForbiddenError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
@@ -7,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { logTaskActivity } from './activity';
 import { enrichTaskWithPeople, mapTaskRows, taskInclude } from './task-queries';
 import { repeatFieldsFromInput } from './tasks-shared';
-import { requireMembership, requireTeamAdmin } from './team-access';
+import { requireMainTaskCreator, requireMembership, requireTeamAdmin } from './team-access';
 
 export async function listTeamTasks(userId: string, teamId: string, archived: boolean) {
   await requireMembership(userId, teamId);
@@ -47,6 +48,7 @@ export async function createTeamTask(
     importance?: string;
     urgency?: string;
     weight?: string;
+    points?: number | null;
     categoryId?: string | null;
     assigneeId?: string | null;
     repeatType?: RepeatType;
@@ -55,7 +57,7 @@ export async function createTeamTask(
     flexibleMaxDays?: number | null;
   },
 ) {
-  await requireMembership(userId, teamId);
+  await requireMainTaskCreator(userId, teamId);
 
   if (input.assigneeId) {
     const assigneeMember = await prisma.teamMember.findUnique({
@@ -83,6 +85,7 @@ export async function createTeamTask(
       importance: input.importance ?? 'medium',
       urgency: input.urgency ?? 'medium',
       weight: input.weight ?? 'normal',
+      points: resolveTaskPoints(input.weight ?? 'normal', input.points),
       categoryId: null,
       assigneeId: input.assigneeId ?? null,
       repeatType: repeat.repeatType,

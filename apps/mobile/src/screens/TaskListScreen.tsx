@@ -41,7 +41,11 @@ export default function TaskListScreen({ navigation }: Props) {
         </TouchableOpacity>
       ),
       headerRight: () => (
-        <TouchableOpacity hitSlop={12} style={styles.plus} onPress={() => navigation.navigate('TaskCreate')}>
+        <TouchableOpacity
+          hitSlop={12}
+          style={styles.plus}
+          onPress={() => navigation.navigate('TaskCreate')}
+        >
           <Text style={styles.plusLabel}>＋</Text>
         </TouchableOpacity>
       ),
@@ -81,7 +85,7 @@ export default function TaskListScreen({ navigation }: Props) {
       }).catch(() => undefined);
     }
 
-    await auth.updateToken(null);
+    await auth.applyAuth(null);
   }
 
   return (
@@ -109,7 +113,9 @@ export default function TaskListScreen({ navigation }: Props) {
         <FlatList
           data={tasks}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
@@ -119,7 +125,10 @@ export default function TaskListScreen({ navigation }: Props) {
           )}
           contentContainerStyle={tasks.length === 0 ? styles.emptyPadding : styles.listPadding}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('TaskDetail', { taskId: item.id })}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('TaskDetail', { taskId: item.id })}
+            >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardStatus}>{item.status}</Text>

@@ -45,17 +45,17 @@ export async function updateSettings(
 ) {
   await getOrCreateSettings(userId);
 
-  const slack =
-    patch.slackWebhookUrl === '' ? null : patch.slackWebhookUrl;
-  const discord =
-    patch.discordWebhookUrl === '' ? null : patch.discordWebhookUrl;
+  const slack = patch.slackWebhookUrl === '' ? null : patch.slackWebhookUrl;
+  const discord = patch.discordWebhookUrl === '' ? null : patch.discordWebhookUrl;
 
   const row = await prisma.userSettings.update({
     where: { userId },
     data: {
       ...(patch.notifyOnDueToday !== undefined ? { notifyOnDueToday: patch.notifyOnDueToday } : {}),
       ...(patch.notifyOnTaskDone !== undefined ? { notifyOnTaskDone: patch.notifyOnTaskDone } : {}),
-      ...(patch.notifyOnTeamAssign !== undefined ? { notifyOnTeamAssign: patch.notifyOnTeamAssign } : {}),
+      ...(patch.notifyOnTeamAssign !== undefined
+        ? { notifyOnTeamAssign: patch.notifyOnTeamAssign }
+        : {}),
       ...(patch.slackWebhookUrl !== undefined ? { slackWebhookUrl: slack ?? null } : {}),
       ...(patch.discordWebhookUrl !== undefined ? { discordWebhookUrl: discord ?? null } : {}),
       ...(patch.googleCalendarLinked !== undefined

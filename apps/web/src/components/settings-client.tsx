@@ -42,7 +42,10 @@ export function SettingsClient({ initial }: Props) {
   async function linkGoogle() {
     setLoading(true);
     try {
-      const res = await fetch('/api/integrations/google', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/api/integrations/google', {
+        method: 'POST',
+        credentials: 'include',
+      });
       const body = await res.json();
       alert(body.message ?? '連携リクエストを受け付けました');
       setSettings((s) => ({ ...s, googleCalendarLinked: true }));
@@ -75,7 +78,9 @@ export function SettingsClient({ initial }: Props) {
 
       <section className="todon-card todon-card-lavender space-y-3 p-5">
         <h2 className="font-extrabold text-todon-ink">Slack / Discord</h2>
-        <p className="todon-muted text-xs">Incoming Webhook URL を貼り付けると、完了時などに投稿します</p>
+        <p className="todon-muted text-xs">
+          Incoming Webhook URL を貼り付けると、完了時などに投稿します
+        </p>
         <div className="space-y-2">
           <label className="todon-label">Slack Webhook</label>
           <input
@@ -90,7 +95,9 @@ export function SettingsClient({ initial }: Props) {
           <input
             className="todon-input"
             value={settings.discordWebhookUrl ?? ''}
-            onChange={(e) => setSettings({ ...settings, discordWebhookUrl: e.target.value || null })}
+            onChange={(e) =>
+              setSettings({ ...settings, discordWebhookUrl: e.target.value || null })
+            }
             placeholder="https://discord.com/api/webhooks/..."
           />
         </div>
@@ -104,7 +111,12 @@ export function SettingsClient({ initial }: Props) {
         <a href="/api/calendar/export" className="todon-link text-sm">
           📅 ICS をダウンロード
         </a>
-        <button type="button" className="todon-btn-ghost" disabled={loading} onClick={() => void linkGoogle()}>
+        <button
+          type="button"
+          className="todon-btn-ghost"
+          disabled={loading}
+          onClick={() => void linkGoogle()}
+        >
           連携済みとしてマーク
         </button>
         {settings.googleCalendarLinked ? (
@@ -115,7 +127,12 @@ export function SettingsClient({ initial }: Props) {
       {message ? <p className="text-sm font-bold text-todon-mint">{message}</p> : null}
       {error ? <p className="todon-error">{error}</p> : null}
 
-      <button type="button" className="todon-btn-primary" disabled={loading} onClick={() => void save()}>
+      <button
+        type="button"
+        className="todon-btn-primary"
+        disabled={loading}
+        onClick={() => void save()}
+      >
         {loading ? '保存中…' : '設定を保存'}
       </button>
     </div>

@@ -18,14 +18,17 @@ import type { AuthStackParamList } from '../navigation/types';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
-  const { client, updateToken, baseUrl } = useAuthContext();
+  const { client, applyAuth, baseUrl } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function onSubmit() {
     if (!baseUrl) {
-      Alert.alert('構成エラー', 'app.json の expo.extra.apiUrl か EXPO_PUBLIC_API_URL を設定してください。');
+      Alert.alert(
+        '構成エラー',
+        'app.json の expo.extra.apiUrl か EXPO_PUBLIC_API_URL を設定してください。',
+      );
 
       return;
     }
@@ -35,10 +38,12 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const auth = await client.login({ email, password });
 
-      await updateToken(auth.token);
+      await applyAuth(auth);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'ログインに失敗しました。ネットワークと API を確認してください。';
+        error instanceof Error
+          ? error.message
+          : 'ログインに失敗しました。ネットワークと API を確認してください。';
 
       Alert.alert('ログインできませんでした', message);
     } finally {
@@ -72,7 +77,13 @@ export default function LoginScreen({ navigation }: Props) {
           />
 
           <Text style={[styles.label, styles.labelSpacing]}>パスワード</Text>
-          <TextInput secureTextEntry style={styles.input} placeholder="••••••••" value={password} onChangeText={setPassword} />
+          <TextInput
+            secureTextEntry
+            style={styles.input}
+            placeholder="••••••••"
+            value={password}
+            onChangeText={setPassword}
+          />
 
           <TouchableOpacity
             style={[styles.button, loading ? styles.disabled : undefined]}

@@ -32,7 +32,9 @@ export default function JoinInviteScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.intro}>招待メールのリンクに含まれるトークン、または管理者から共有された文字列を貼り付けます。</Text>
+      <Text style={styles.intro}>
+        招待メールのリンクに含まれるトークン、または管理者から共有された文字列を貼り付けます。
+      </Text>
       <Text style={styles.label}>トークン</Text>
       <TextInput
         style={[styles.input, styles.multiline]}

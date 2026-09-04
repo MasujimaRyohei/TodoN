@@ -13,10 +13,12 @@ import type {
   TaskComment,
   TaskTemplate,
   TaskTemplatePayload,
+  RefreshResponse,
   TaskWithPeople,
   Team,
   TeamInvite,
   TeamMember,
+  TeamPointsPayload,
   User,
   UserSettings,
   WeeklyReview,
@@ -25,6 +27,9 @@ import type {
 export type ApiClientOptions = {
   baseUrl: string;
   getToken?: () => string | null | undefined;
+  getRefreshToken?: () => string | null | undefined;
+  /** Called after a successful token refresh so the caller can persist the new pair. */
+  onTokensRefreshed?: (tokens: RefreshResponse) => void | Promise<void>;
 };
 
 type Json = Record<string, unknown>;
@@ -41,25 +46,30 @@ export class TodoNApiClient {
     return `${base}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
-  private async request<T>(
-    path: string,
-    init: RequestInit & { parseJson?: boolean } = {},
-  ): Promise<T> {
+  private async send(path: string, init: RequestInit, token?: string | null) {
     const headers = new Headers(init.headers);
     if (!headers.has('Content-Type') && init.body) {
       headers.set('Content-Type', 'application/json');
     }
-
-    const token = this.opts.getToken?.();
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const res = await fetch(this.url(path), {
-      ...init,
-      headers,
-      credentials: 'include',
-    });
+    return fetch(this.url(path), { ...init, headers, credentials: 'include' });
+  }
+
+  private async request<T>(
+    path: string,
+    init: RequestInit & { parseJson?: boolean } = {},
+  ): Promise<T> {
+    let res = await this.send(path, init, this.opts.getToken?.());
+
+    if (res.status === 401 && path !== '/api/auth/refresh') {
+      const refreshed = await this.tryRefresh();
+      if (refreshed) {
+        res = await this.send(path, init, refreshed);
+      }
+    }
 
     if (!res.ok) {
       let message = res.statusText;
@@ -79,6 +89,29 @@ export class TodoNApiClient {
     }
 
     return (await res.json()) as T;
+  }
+
+  private async tryRefresh(): Promise<string | null> {
+    const refreshToken = this.opts.getRefreshToken?.();
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      const res = await this.send('/api/auth/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        return null;
+      }
+
+      const tokens = (await res.json()) as RefreshResponse;
+      await this.opts.onTokensRefreshed?.(tokens);
+      return tokens.token;
+    } catch {
+      return null;
+    }
   }
 
   register(body: { email: string; password: string; name?: string }) {
@@ -149,7 +182,7 @@ export class TodoNApiClient {
     return this.request<void>(`/api/tasks/${id}`, { method: 'DELETE' });
   }
 
-  createSubtask(taskId: string, body: { title: string }) {
+  createSubtask(taskId: string, body: { title: string; points?: number }) {
     return this.request<unknown>(`/api/tasks/${taskId}/subtasks`, {
       method: 'POST',
       body: JSON.stringify(body),
@@ -237,6 +270,20 @@ export class TodoNApiClient {
     return this.request<WeeklyReview>(`/api/teams/${teamId}/reviews`, { method: 'POST' });
   }
 
+  getTeamPoints(teamId: string) {
+    return this.request<TeamPointsPayload>(`/api/teams/${teamId}/points`);
+  }
+
+  updateTeam(
+    teamId: string,
+    body: { name?: string; icon?: string | null; mainTaskCreateRole?: Team['mainTaskCreateRole'] },
+  ) {
+    return this.request<Team>(`/api/teams/${teamId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
+
   acceptInvite(body: { token: string }) {
     return this.request<Team>('/api/invites/accept', {
       method: 'POST',
@@ -287,7 +334,10 @@ export class TodoNApiClient {
   }
 
   createTemplate(body: { name: string; payload: TaskTemplatePayload }) {
-    return this.request<TaskTemplate>('/api/templates', { method: 'POST', body: JSON.stringify(body) });
+    return this.request<TaskTemplate>('/api/templates', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   deleteTemplate(id: string) {

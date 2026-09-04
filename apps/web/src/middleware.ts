@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { verifyUserToken } from '@/lib/auth/jwt';
 import { createMiddlewareClient, updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(req: NextRequest) {
@@ -53,19 +52,7 @@ export async function middleware(req: NextRequest) {
     } = await supabase.auth.getUser();
     authed = Boolean(user);
   } catch {
-    // Supabase 未設定時は JWT のみ
-  }
-
-  if (!authed) {
-    const token = req.cookies.get('todon_token')?.value;
-    if (token) {
-      try {
-        await verifyUserToken(token);
-        authed = true;
-      } catch {
-        authed = false;
-      }
-    }
+    authed = false;
   }
 
   if (!authed) {

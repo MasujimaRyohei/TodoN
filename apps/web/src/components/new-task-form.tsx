@@ -1,6 +1,7 @@
 'use client';
 
 import type { Category, Project, RepeatType, TaskWeight, Team } from '@todon/shared';
+import { pointsFromWeight, roleMeetsMinimum } from '@todon/shared';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -28,6 +29,7 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
   const [importance, setImportance] = useState<'low' | 'medium' | 'high'>('medium');
   const [urgency, setUrgency] = useState<'low' | 'medium' | 'high'>('medium');
   const [weight, setWeight] = useState<TaskWeight>('normal');
+  const [pointsInput, setPointsInput] = useState<number | null>(null);
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [repeatIntervalDays, setRepeatIntervalDays] = useState(7);
   const [flexibleMinDays, setFlexibleMinDays] = useState(2);
@@ -98,9 +100,18 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
     return () => clearTimeout(timer);
   }, [title]);
 
+  const points = pointsInput ?? pointsFromWeight(weight);
+
+  const selectedTeam = scope === 'team' ? teams.find((t) => t.id === teamId) : undefined;
+  const canCreateTeamMainTask =
+    !selectedTeam || roleMeetsMinimum(selectedTeam.myRole, selectedTeam.mainTaskCreateRole);
+
   const duePayload = useMemo(() => {
     if (dueType !== 'datetime' || !dueAt) {
-      return { dueType: dueType === 'datetime' ? 'none' : dueType, dueAt: undefined as string | undefined };
+      return {
+        dueType: dueType === 'datetime' ? 'none' : dueType,
+        dueAt: undefined as string | undefined,
+      };
     }
 
     return { dueType: 'datetime' as const, dueAt: new Date(dueAt).toISOString() };
@@ -122,6 +133,7 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
           importance,
           urgency,
           weight,
+          points,
           scope,
           ...(scope === 'team' ? { teamId, assigneeId: assigneeId || undefined } : {}),
           ...(scope === 'personal' && projectId ? { projectId } : {}),
@@ -170,7 +182,9 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <label className="todon-label">タイトル（必須）</label>
           <div className="flex gap-2">
-            <VoiceInputButton onText={(text) => setTitle((prev) => (prev ? `${prev} ${text}` : text))} />
+            <VoiceInputButton
+              onText={(text) => setTitle((prev) => (prev ? `${prev} ${text}` : text))}
+            />
             <button
               type="button"
               className="todon-btn-ghost text-xs"
@@ -201,7 +215,9 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
                   body: JSON.stringify({ title }),
                 })
                   .then((r) => r.json())
-                  .then((body: { suggestions: string[] }) => setSubtaskHints(body.suggestions ?? []));
+                  .then((body: { suggestions: string[] }) =>
+                    setSubtaskHints(body.suggestions ?? []),
+                  );
               }}
             >
               サブタスク案
@@ -224,7 +240,11 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
               ))}
             </ul>
             <label className="mt-2 flex items-center gap-2 text-xs">
-              <input type="checkbox" checked={applySubtasks} onChange={(e) => setApplySubtasks(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={applySubtasks}
+                onChange={(e) => setApplySubtasks(e.target.checked)}
+              />
               作成時にサブタスクとして追加する
             </label>
           </div>
@@ -408,7 +428,31 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
             <option value="heavy">重い</option>
           </select>
         </div>
+
+        <div className="space-y-2">
+          <label className="todon-label">配点（ポイント）</label>
+          <input
+            type="number"
+            min={0}
+            max={999}
+            className="todon-input"
+            value={points}
+            onChange={(e) =>
+              setPointsInput(Math.max(0, Math.min(999, Number(e.target.value) || 0)))
+            }
+          />
+          <p className="text-xs text-todon-ink-muted">
+            重さの目安から自動設定。チームでは上長がタスクの持ち点を決めます。
+          </p>
+        </div>
       </div>
+
+      {scope === 'team' && selectedTeam && !canCreateTeamMainTask ? (
+        <p className="todon-error">
+          このチームでメインタスクを作成する権限がありません（必要ロール:{' '}
+          {selectedTeam.mainTaskCreateRole}）。
+        </p>
+      ) : null}
 
       <RepeatFields
         repeatType={repeatType}
@@ -426,7 +470,7 @@ export function NewTaskForm({ categories, teams, projects }: Props) {
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (scope === 'team' && !canCreateTeamMainTask)}
           className="todon-btn-primary disabled:opacity-50"
         >
           {loading ? '保存中…' : '作成する'}

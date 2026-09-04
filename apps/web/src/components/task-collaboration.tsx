@@ -121,7 +121,9 @@ export function TaskCollaboration({ task, members }: Props) {
         <h2 className="text-lg font-extrabold text-todon-ink">チーム情報</h2>
         <p className="mt-1 text-xs text-todon-ink-muted">
           オーナー: {task.owner?.name ?? task.owner?.email ?? '—'}
-          {task.assignee ? ` / 担当: ${task.assignee.name ?? task.assignee.email}` : ' / 担当: 未割当'}
+          {task.assignee
+            ? ` / 担当: ${task.assignee.name ?? task.assignee.email}`
+            : ' / 担当: 未割当'}
         </p>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -195,7 +197,9 @@ export function TaskCollaboration({ task, members }: Props) {
           <ul className="space-y-2 text-sm text-todon-ink-muted">
             {activity.map((log) => (
               <li key={log.id} className="border-b border-todon-border pb-2">
-                <span className="text-todon-ink-muted">{new Date(log.createdAt).toLocaleString('ja-JP')}</span>
+                <span className="text-todon-ink-muted">
+                  {new Date(log.createdAt).toLocaleString('ja-JP')}
+                </span>
                 {' · '}
                 <span>{log.user?.name ?? log.user?.email ?? 'ユーザー'}</span>
                 {' · '}

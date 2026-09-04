@@ -32,7 +32,9 @@ export async function resolveAppScopeForUser(
   return { scope: { mode: 'personal' }, scopeInvalidated: true };
 }
 
-export const getValidatedServerAppScope = cache(async (userId: string): Promise<ValidatedAppScope> => {
-  const current = await getServerAppScope();
-  return resolveAppScopeForUser(userId, current);
-});
+export const getValidatedServerAppScope = cache(
+  async (userId: string): Promise<ValidatedAppScope> => {
+    const current = await getServerAppScope();
+    return resolveAppScopeForUser(userId, current);
+  },
+);

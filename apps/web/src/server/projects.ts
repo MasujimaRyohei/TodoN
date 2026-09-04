@@ -92,7 +92,12 @@ export async function getProject(userId: string, projectId: string) {
 
 export async function createProject(
   userId: string,
-  input: { name: string; description?: string | null; color?: string | null; teamId?: string | null },
+  input: {
+    name: string;
+    description?: string | null;
+    color?: string | null;
+    teamId?: string | null;
+  },
 ) {
   const name = input.name.trim();
   if (!name) {
