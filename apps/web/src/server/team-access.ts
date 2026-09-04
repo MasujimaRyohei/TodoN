@@ -1,18 +1,10 @@
 import type { Task as PrismaTask } from '@prisma/client';
-import type { TeamRole } from '@todon/shared';
+import { isTeamRole, roleMeetsMinimum } from '@todon/shared';
 
 import { ForbiddenError, NotFoundError } from '@/lib/http';
 import { prisma } from '@/lib/prisma';
 
-export function isTeamRole(value: string): value is TeamRole {
-  return value === 'owner' || value === 'admin' || value === 'member';
-}
-
-const ROLE_RANK: Record<TeamRole, number> = { owner: 3, admin: 2, member: 1 };
-
-export function roleMeetsMinimum(role: string, minimum: TeamRole): boolean {
-  return isTeamRole(role) && ROLE_RANK[role] >= ROLE_RANK[minimum];
-}
+export { isTeamRole, roleMeetsMinimum };
 
 /** チーム主タスクの作成・ポイント設定に必要な権限を確認する。 */
 export async function requireMainTaskCreator(userId: string, teamId: string) {

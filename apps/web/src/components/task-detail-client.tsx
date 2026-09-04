@@ -1,6 +1,7 @@
 'use client';
 
 import type { RepeatType, SubTask, Task, TaskWithPeople, TeamMember } from '@todon/shared';
+import { subtaskBudget } from '@todon/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -11,6 +12,7 @@ import { TaskCollaboration } from '@/components/task-collaboration';
 type Props = {
   task: TaskWithPeople;
   members?: TeamMember[];
+  canSetPoints?: boolean;
 };
 
 const statusLabels: Record<Task['status'], string> = {
@@ -21,7 +23,7 @@ const statusLabels: Record<Task['status'], string> = {
   canceled: '中止',
 };
 
-export function TaskDetailClient({ task: initial, members = [] }: Props) {
+export function TaskDetailClient({ task: initial, members = [], canSetPoints = true }: Props) {
   const router = useRouter();
   const [task, setTask] = useState(initial);
   const [title, setTitle] = useState(initial.title);
@@ -30,6 +32,8 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
   const [importance, setImportance] = useState(initial.importance);
   const [urgency, setUrgency] = useState(initial.urgency);
   const [weight, setWeight] = useState(initial.weight);
+  const [points, setPoints] = useState(initial.points);
+  const [subtaskPoints, setSubtaskPoints] = useState(0);
   const [dueType, setDueType] = useState(initial.dueType);
   const [dueAt, setDueAt] = useState(
     initial.dueAt ? new Date(initial.dueAt).toISOString().slice(0, 16) : '',
@@ -44,6 +48,11 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
   const [loading, setLoading] = useState(false);
 
   const archived = Boolean(task.archivedAt);
+
+  const budget = useMemo(
+    () => subtaskBudget(task.points, task.subtasks ?? []),
+    [task.points, task.subtasks],
+  );
 
   const progress = useMemo(() => {
     const subs = task.subtasks ?? [];
@@ -70,6 +79,7 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
           importance,
           urgency,
           weight,
+          ...(canSetPoints && points !== task.points ? { points } : {}),
           dueType,
           ...(dueType === 'datetime' && dueAt ? { dueAt: new Date(dueAt).toISOString() } : {}),
           ...(dueType !== 'datetime' ? { dueAt: null } : {}),
@@ -188,7 +198,7 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title: subtaskTitle.trim() }),
+        body: JSON.stringify({ title: subtaskTitle.trim(), points: subtaskPoints }),
       });
 
       if (!res.ok) {
@@ -202,6 +212,7 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
         subtasks: [...(task.subtasks ?? []), subtask as SubTask],
       });
       setSubtaskTitle('');
+      setSubtaskPoints(0);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : '追加に失敗しました');
@@ -210,7 +221,7 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
     }
   }
 
-  async function toggleSubtask(sub: SubTask) {
+  async function patchSubtask(sub: SubTask, patch: { completed?: boolean; points?: number }) {
     setLoading(true);
     setError(null);
     try {
@@ -218,7 +229,7 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ completed: !sub.completed }),
+        body: JSON.stringify(patch),
       });
 
       if (!res.ok) {
@@ -367,6 +378,24 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
               <option value="heavy">重い</option>
             </select>
           </div>
+
+          <div className="space-y-2">
+            <label className="todon-label">配点（ポイント）</label>
+            <input
+              type="number"
+              min={budget.allocated}
+              max={999}
+              value={points}
+              disabled={archived || !canSetPoints}
+              onChange={(e) => setPoints(Math.max(0, Math.min(999, Number(e.target.value) || 0)))}
+              className="todon-input disabled:opacity-50"
+            />
+            <p className="text-xs text-todon-ink-muted">
+              {canSetPoints
+                ? `サブタスクへ割当済み ${budget.allocated} / 残り ${budget.remaining}`
+                : '配点は上長のみ変更できます'}
+            </p>
+          </div>
         </div>
 
         {!archived ? (
@@ -446,6 +475,9 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
             <h2 className="text-lg font-extrabold text-todon-ink">サブタスク</h2>
             <p className="text-xs text-todon-ink-muted">小さなステップに分けて進捗を可視化します</p>
           </div>
+          <span className="rounded-full bg-todon-primary-soft px-3 py-1 text-xs font-bold text-todon-primary">
+            残り {budget.remaining} pt
+          </span>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -455,6 +487,18 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
             onChange={(e) => setSubtaskTitle(e.target.value)}
             placeholder="新しいサブタスク"
             className="todon-input flex-1 disabled:opacity-50"
+          />
+          <input
+            type="number"
+            min={0}
+            max={budget.remaining}
+            value={subtaskPoints}
+            disabled={archived}
+            onChange={(e) =>
+              setSubtaskPoints(Math.max(0, Math.min(budget.remaining, Number(e.target.value) || 0)))
+            }
+            className="todon-input w-full sm:w-24 disabled:opacity-50"
+            aria-label="サブタスクの配点"
           />
           <button
             type="button"
@@ -477,12 +521,30 @@ export function TaskDetailClient({ task: initial, members = [] }: Props) {
                   type="checkbox"
                   disabled={archived || loading}
                   checked={sub.completed}
-                  onChange={() => void toggleSubtask(sub)}
+                  onChange={() => void patchSubtask(sub, { completed: !sub.completed })}
                 />
-                <span className={sub.completed ? 'line-through text-todon-ink-muted' : ''}>
+                <span className={sub.completed ? 'text-todon-ink-muted line-through' : ''}>
                   {sub.title}
                 </span>
               </label>
+              <div className="flex items-center gap-1 text-xs text-todon-ink-muted">
+                <input
+                  type="number"
+                  min={0}
+                  max={budget.remaining + sub.points}
+                  defaultValue={sub.points}
+                  disabled={archived || loading}
+                  onBlur={(e) => {
+                    const next = Math.max(0, Math.min(999, Number(e.target.value) || 0));
+                    if (next !== sub.points) {
+                      void patchSubtask(sub, { points: next });
+                    }
+                  }}
+                  className="todon-input w-16 px-2 py-1 text-right disabled:opacity-50"
+                  aria-label={`${sub.title} の配点`}
+                />
+                <span>pt</span>
+              </div>
             </li>
           ))}
         </ul>

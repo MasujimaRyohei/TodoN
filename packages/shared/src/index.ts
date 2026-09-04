@@ -6,6 +6,7 @@ export * from './flexible-repeat';
 export * from './priority-suggestion';
 export * from './suggest-subtasks';
 export * from './task-points';
+export * from './team-roles';
 export * from './today-progress';
 export * from './types';
 export * from './weight-estimate';

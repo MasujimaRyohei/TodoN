@@ -1,9 +1,10 @@
 'use client';
 
-import type { TaskWithPeople, Team, TeamMember } from '@todon/shared';
+import type { TaskWithPeople, Team, TeamMember, TeamPointsPayload, TeamRole } from '@todon/shared';
+import { isTeamRole } from '@todon/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { TEAM_ICON_PRESETS } from '@/lib/team-icon-presets';
 import { persistAppScope, teamDisplayIcon } from '@/lib/scope-preferences';
@@ -16,17 +17,68 @@ type Props = {
 
 const roleLabels = { owner: 'オーナー', admin: '管理者', member: 'メンバー' } as const;
 
+const MAIN_TASK_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
+  { value: 'owner', label: 'オーナーのみ' },
+  { value: 'admin', label: 'オーナー・管理者' },
+  { value: 'member', label: '全メンバー' },
+];
+
 export function TeamDetailClient({ team, members: initialMembers, tasks: initialTasks }: Props) {
   const router = useRouter();
   const [members, setMembers] = useState(initialMembers);
   const [tasks] = useState(initialTasks);
   const [inviteEmail, setInviteEmail] = useState('');
   const [teamIcon, setTeamIcon] = useState(team.icon ?? '');
+  const [mainTaskCreateRole, setMainTaskCreateRole] = useState<TeamRole>(team.mainTaskCreateRole);
+  const [points, setPoints] = useState<TeamPointsPayload | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const canAdmin = team.myRole === 'owner' || team.myRole === 'admin';
+  const isOwner = team.myRole === 'owner';
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(`/api/teams/${team.id}/points`, { credentials: 'include' });
+        if (res.ok) {
+          setPoints((await res.json()) as TeamPointsPayload);
+        }
+      } catch {
+        setPoints(null);
+      }
+    })();
+  }, [team.id]);
+
+  async function onSaveMainTaskRole(next: TeamRole) {
+    setMainTaskCreateRole(next);
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/teams/${team.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ mainTaskCreateRole: next }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { message?: string }).message ?? '設定の更新に失敗しました');
+      }
+
+      setMessage('メインタスク作成権限を更新しました');
+      router.refresh();
+    } catch (e) {
+      setMainTaskCreateRole(team.mainTaskCreateRole);
+      setError(e instanceof Error ? e.message : '設定の更新に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function onInvite(evt: React.FormEvent) {
     evt.preventDefault();
@@ -214,6 +266,65 @@ export function TeamDetailClient({ team, members: initialMembers, tasks: initial
           </ul>
         )}
       </section>
+
+      <section className="space-y-3 todon-card p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-extrabold text-todon-ink">ポイントランキング</h2>
+          {points ? (
+            <span className="text-xs text-todon-ink-muted">
+              チーム累計 {points.teamTotal.allTime} pt
+            </span>
+          ) : null}
+        </div>
+        {!points || points.members.length === 0 ? (
+          <p className="todon-muted">まだ獲得ポイントがありません</p>
+        ) : (
+          <ul className="space-y-2">
+            {points.members.map((member, index) => (
+              <li
+                key={member.userId}
+                className="flex flex-wrap items-center justify-between gap-2 todon-card px-3 py-2 text-sm"
+              >
+                <span className="text-todon-ink">
+                  <span className="mr-2 font-bold text-todon-ink-muted">#{index + 1}</span>
+                  {member.name ?? member.email}
+                </span>
+                <span className="flex gap-3 text-xs text-todon-ink-muted">
+                  <span>今日 {member.today}</span>
+                  <span>今週 {member.week}</span>
+                  <span>今月 {member.month}</span>
+                  <span className="font-bold text-todon-primary">累計 {member.allTime}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {isOwner ? (
+        <section className="todon-section space-y-3 p-4">
+          <h2 className="text-sm font-extrabold text-todon-ink">メインタスク作成権限</h2>
+          <p className="text-xs text-todon-ink-muted">
+            メインタスクの作成とポイント配分ができるロールを選びます。サブタスクは全メンバーが作成できます。
+          </p>
+          <select
+            className="todon-input"
+            value={mainTaskCreateRole}
+            disabled={loading}
+            onChange={(e) => {
+              if (isTeamRole(e.target.value)) {
+                void onSaveMainTaskRole(e.target.value);
+              }
+            }}
+          >
+            {MAIN_TASK_ROLE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </section>
+      ) : null}
 
       <section className="space-y-3 todon-card p-5">
         <h2 className="text-lg font-extrabold text-todon-ink">メンバー</h2>
