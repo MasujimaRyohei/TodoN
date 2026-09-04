@@ -8,6 +8,28 @@ export function isTeamRole(value: string): value is TeamRole {
   return value === 'owner' || value === 'admin' || value === 'member';
 }
 
+const ROLE_RANK: Record<TeamRole, number> = { owner: 3, admin: 2, member: 1 };
+
+export function roleMeetsMinimum(role: string, minimum: TeamRole): boolean {
+  return isTeamRole(role) && ROLE_RANK[role] >= ROLE_RANK[minimum];
+}
+
+/** チーム主タスクの作成・ポイント設定に必要な権限を確認する。 */
+export async function requireMainTaskCreator(userId: string, teamId: string) {
+  const membership = await requireMembership(userId, teamId);
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { mainTaskCreateRole: true },
+  });
+
+  const minimum = team && isTeamRole(team.mainTaskCreateRole) ? team.mainTaskCreateRole : 'admin';
+  if (!roleMeetsMinimum(membership.role, minimum)) {
+    throw new ForbiddenError('メインタスクを作成する権限がありません');
+  }
+
+  return membership;
+}
+
 export async function getMembership(userId: string, teamId: string) {
   return prisma.teamMember.findUnique({
     where: { teamId_userId: { teamId, userId } },

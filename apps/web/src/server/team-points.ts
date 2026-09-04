@@ -1,6 +1,6 @@
 import type { TeamMemberPointsSummary, TeamPointsPayload } from '@todon/shared';
 
-import { endOfLocalDay, startOfLocalDay } from '@/lib/date';
+import { startOfLocalDay } from '@/lib/date';
 import { prisma } from '@/lib/prisma';
 
 import { listTeamMembers } from './teams';
@@ -31,6 +31,36 @@ function emptyBucket(): Bucket {
   return { allTime: 0, month: 0, week: 0, today: 0 };
 }
 
+type Earning = { userId: string; points: number; at: Date };
+
+function addEarning(buckets: Map<string, Bucket>, earning: Earning, marks: Marks) {
+  if (earning.points <= 0) {
+    return;
+  }
+
+  const bucket = buckets.get(earning.userId);
+  if (!bucket) {
+    return;
+  }
+
+  bucket.allTime += earning.points;
+  if (earning.at >= marks.month) {
+    bucket.month += earning.points;
+  }
+  if (earning.at >= marks.week) {
+    bucket.week += earning.points;
+  }
+  if (earning.at >= marks.today) {
+    bucket.today += earning.points;
+  }
+}
+
+type Marks = { today: Date; week: Date; month: Date };
+
+/**
+ * ポイントは主にサブタスク完了で獲得する。サブタスクを持たないメインタスクを
+ * 完了した場合のみ、そのタスクの持ち点を完了者へ加算する（個人利用の互換のため）。
+ */
 export async function getTeamMemberPoints(
   userId: string,
   teamId: string,
@@ -38,69 +68,59 @@ export async function getTeamMemberPoints(
   await requireMembership(userId, teamId);
 
   const now = new Date();
-  const todayStart = startOfLocalDay(now);
-  const todayEnd = endOfLocalDay(now);
-  const weekStart = startOfLocalWeek(now);
-  const monthStart = startOfLocalMonth(now);
+  const marks: Marks = {
+    today: startOfLocalDay(now),
+    week: startOfLocalWeek(now),
+    month: startOfLocalMonth(now),
+  };
 
-  const [members, completions] = await Promise.all([
+  const [members, doneSubtasks, soloTaskCompletions] = await Promise.all([
     listTeamMembers(userId, teamId),
+    prisma.subTask.findMany({
+      where: {
+        completed: true,
+        completedById: { not: null },
+        completedAt: { not: null },
+        task: { teamId, scope: 'team', deletedAt: null },
+      },
+      select: { completedById: true, completedAt: true, points: true },
+    }),
     prisma.taskActivityLog.findMany({
       where: {
         action: 'status_changed',
         after: 'done',
-        task: {
-          teamId,
-          scope: 'team',
-          deletedAt: null,
-        },
+        task: { teamId, scope: 'team', deletedAt: null, subtasks: { none: {} } },
       },
-      select: {
-        userId: true,
-        createdAt: true,
-        task: { select: { points: true } },
-      },
+      select: { userId: true, createdAt: true, task: { select: { points: true } } },
     }),
   ]);
 
   const buckets = new Map<string, Bucket>();
-
   for (const member of members) {
     buckets.set(member.userId, emptyBucket());
   }
 
-  for (const row of completions) {
-    const bucket = buckets.get(row.userId) ?? emptyBucket();
-    const points = row.task.points;
-    const at = row.createdAt;
-
-    bucket.allTime += points;
-
-    if (at >= monthStart) {
-      bucket.month += points;
+  for (const sub of doneSubtasks) {
+    if (!sub.completedById || !sub.completedAt) {
+      continue;
     }
-
-    if (at >= weekStart) {
-      bucket.week += points;
-    }
-
-    if (at >= todayStart && at < todayEnd) {
-      bucket.today += points;
-    }
-
-    buckets.set(row.userId, bucket);
+    addEarning(
+      buckets,
+      { userId: sub.completedById, points: sub.points, at: sub.completedAt },
+      marks,
+    );
   }
 
-  const memberSummaries: TeamMemberPointsSummary[] = members.map((member) => {
-    const bucket = buckets.get(member.userId) ?? emptyBucket();
+  for (const log of soloTaskCompletions) {
+    addEarning(buckets, { userId: log.userId, points: log.task.points, at: log.createdAt }, marks);
+  }
 
-    return {
-      userId: member.userId,
-      name: member.user?.name ?? null,
-      email: member.user?.email ?? member.userId,
-      ...bucket,
-    };
-  });
+  const memberSummaries: TeamMemberPointsSummary[] = members.map((member) => ({
+    userId: member.userId,
+    name: member.user?.name ?? null,
+    email: member.user?.email ?? member.userId,
+    ...(buckets.get(member.userId) ?? emptyBucket()),
+  }));
 
   memberSummaries.sort((a, b) => b.month - a.month || b.allTime - a.allTime);
 

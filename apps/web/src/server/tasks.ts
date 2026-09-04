@@ -1,4 +1,5 @@
 import type { RepeatType, TaskWithPeople } from '@todon/shared';
+import { fitsSubtaskBudget, resolveTaskPoints, subtaskBudget } from '@todon/shared';
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/lib/http';
 import { mapSubTask, mapTask } from '@/lib/mappers';
@@ -8,7 +9,7 @@ import { logTaskActivity } from './activity';
 import { notifyTaskDone } from './integrations';
 import { enrichTaskWithPeople, fetchTaskDetail, mapTaskRows, taskInclude } from './task-queries';
 import { buildRepeatCompletionPatch, repeatFieldsFromInput } from './tasks-shared';
-import { requireTaskAccess, requireTaskEdit } from './team-access';
+import { requireMainTaskCreator, requireTaskAccess, requireTaskEdit } from './team-access';
 import { createTeamTask } from './team-tasks';
 
 export { buildRepeatCompletionPatch, repeatFieldsFromInput };
@@ -59,6 +60,7 @@ export async function createTask(
     importance?: string;
     urgency?: string;
     weight?: string;
+    points?: number | null;
     categoryId?: string | null;
     repeatType?: RepeatType;
     repeatIntervalDays?: number | null;
@@ -109,6 +111,7 @@ export async function createTask(
       importance: input.importance ?? 'medium',
       urgency: input.urgency ?? 'medium',
       weight: input.weight ?? 'normal',
+      points: resolveTaskPoints(input.weight ?? 'normal', input.points),
       categoryId: input.categoryId ?? null,
       projectId: input.projectId ?? null,
       startAt: input.startAt ?? null,
@@ -136,6 +139,7 @@ export async function updateTask(
     importance: string;
     urgency: string;
     weight: string;
+    points: number;
     categoryId: string | null;
     assigneeId: string | null;
     projectId?: string | null;
@@ -174,6 +178,23 @@ export async function updateTask(
     }
   }
 
+  if (patch.points !== undefined) {
+    if (existing.scope === 'team' && existing.teamId) {
+      await requireMainTaskCreator(userId, existing.teamId);
+    }
+
+    const subs = await prisma.subTask.findMany({
+      where: { taskId },
+      select: { id: true, points: true },
+    });
+    const { allocated } = subtaskBudget(patch.points, subs);
+    if (allocated > patch.points) {
+      throw new BadRequestError(
+        `サブタスクに割り当て済みのポイント(${allocated})を下回る値にはできません`,
+      );
+    }
+  }
+
   const completing = patch.status === 'done' && existing.status !== 'done';
 
   const repeatPatch =
@@ -198,6 +219,7 @@ export async function updateTask(
       ...(patch.importance !== undefined ? { importance: patch.importance } : {}),
       ...(patch.urgency !== undefined ? { urgency: patch.urgency } : {}),
       ...(patch.weight !== undefined ? { weight: patch.weight } : {}),
+      ...(patch.points !== undefined ? { points: patch.points } : {}),
       ...(patch.categoryId !== undefined ? { categoryId: patch.categoryId } : {}),
       ...(patch.assigneeId !== undefined ? { assigneeId: patch.assigneeId } : {}),
       ...(patch.projectId !== undefined ? { projectId: patch.projectId } : {}),
@@ -277,9 +299,25 @@ export async function deleteArchivedTask(userId: string, taskId: string) {
   return enrichTaskWithPeople(row);
 }
 
-export async function createSubtask(userId: string, taskId: string, title: string) {
-  await getActiveTask(userId, taskId);
+export async function createSubtask(
+  userId: string,
+  taskId: string,
+  input: { title: string; points?: number },
+) {
+  const task = await getActiveTask(userId, taskId);
   await requireTaskEdit(userId, taskId);
+
+  const points = input.points ?? 0;
+  if (points > 0) {
+    const siblings = await prisma.subTask.findMany({
+      where: { taskId },
+      select: { id: true, points: true },
+    });
+    if (!fitsSubtaskBudget(task.points, siblings, points)) {
+      const { remaining } = subtaskBudget(task.points, siblings);
+      throw new BadRequestError(`割り当て可能なポイントを超えています（残り ${remaining}）`);
+    }
+  }
 
   const last = await prisma.subTask.findFirst({
     where: { taskId },
@@ -291,12 +329,13 @@ export async function createSubtask(userId: string, taskId: string, title: strin
   const row = await prisma.subTask.create({
     data: {
       taskId,
-      title,
+      title: input.title,
+      points,
       sortOrder: nextOrder,
     },
   });
 
-  await logTaskActivity({ taskId, userId, action: 'subtask_added', after: title });
+  await logTaskActivity({ taskId, userId, action: 'subtask_added', after: input.title });
 
   return mapSubTask(row);
 }
@@ -304,7 +343,7 @@ export async function createSubtask(userId: string, taskId: string, title: strin
 export async function updateSubtask(
   userId: string,
   subtaskId: string,
-  patch: Partial<{ title: string; completed: boolean; order: number }>,
+  patch: Partial<{ title: string; completed: boolean; points: number; order: number }>,
 ) {
   const subtask = await prisma.subTask.findFirst({
     where: { id: subtaskId },
@@ -321,12 +360,31 @@ export async function updateSubtask(
     throw new BadRequestError('アーカイブ済みタスクは編集できません');
   }
 
+  if (patch.points !== undefined && patch.points !== subtask.points) {
+    const siblings = await prisma.subTask.findMany({
+      where: { taskId: subtask.taskId },
+      select: { id: true, points: true },
+    });
+    if (!fitsSubtaskBudget(subtask.task.points, siblings, patch.points, subtaskId)) {
+      const { remaining } = subtaskBudget(subtask.task.points, siblings, subtaskId);
+      throw new BadRequestError(`割り当て可能なポイントを超えています（残り ${remaining}）`);
+    }
+  }
+
+  const togglingCompletion = patch.completed !== undefined && patch.completed !== subtask.completed;
+
   const row = await prisma.subTask.update({
     where: { id: subtaskId },
     data: {
       ...(patch.title !== undefined ? { title: patch.title } : {}),
       ...(patch.completed !== undefined ? { completed: patch.completed } : {}),
+      ...(patch.points !== undefined ? { points: patch.points } : {}),
       ...(patch.order !== undefined ? { sortOrder: patch.order } : {}),
+      ...(togglingCompletion
+        ? patch.completed
+          ? { completedById: userId, completedAt: new Date() }
+          : { completedById: null, completedAt: null }
+        : {}),
       updatedAt: new Date(),
     },
   });

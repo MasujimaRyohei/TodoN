@@ -22,6 +22,7 @@ function mapTeam(
     name: row.name,
     icon: row.icon,
     ownerId: row.ownerId,
+    mainTaskCreateRole: isTeamRole(row.mainTaskCreateRole) ? row.mainTaskCreateRole : 'admin',
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     memberCount: row._count?.members,
@@ -135,11 +136,16 @@ export async function createTeam(userId: string, name: string, icon?: string | n
 export async function updateTeam(
   userId: string,
   teamId: string,
-  patch: { name?: string; icon?: string | null },
+  patch: { name?: string; icon?: string | null; mainTaskCreateRole?: TeamRole },
 ) {
-  await requireTeamAdmin(userId, teamId);
+  const membership = await requireTeamAdmin(userId, teamId);
 
-  const data: { name?: string; icon?: string | null; updatedAt: Date } = {
+  const data: {
+    name?: string;
+    icon?: string | null;
+    mainTaskCreateRole?: TeamRole;
+    updatedAt: Date;
+  } = {
     updatedAt: new Date(),
   };
 
@@ -153,6 +159,13 @@ export async function updateTeam(
 
   if (patch.icon !== undefined) {
     data.icon = patch.icon?.trim() || null;
+  }
+
+  if (patch.mainTaskCreateRole !== undefined) {
+    if (membership.role !== 'owner') {
+      throw new ForbiddenError('メインタスク作成権限の変更はオーナーのみ可能です');
+    }
+    data.mainTaskCreateRole = patch.mainTaskCreateRole;
   }
 
   const team = await prisma.team.update({

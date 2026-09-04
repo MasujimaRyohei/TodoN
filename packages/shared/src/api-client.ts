@@ -17,6 +17,7 @@ import type {
   Team,
   TeamInvite,
   TeamMember,
+  TeamPointsPayload,
   User,
   UserSettings,
   WeeklyReview,
@@ -149,7 +150,7 @@ export class TodoNApiClient {
     return this.request<void>(`/api/tasks/${id}`, { method: 'DELETE' });
   }
 
-  createSubtask(taskId: string, body: { title: string }) {
+  createSubtask(taskId: string, body: { title: string; points?: number }) {
     return this.request<unknown>(`/api/tasks/${taskId}/subtasks`, {
       method: 'POST',
       body: JSON.stringify(body),
@@ -235,6 +236,20 @@ export class TodoNApiClient {
 
   generateTeamWeeklyReview(teamId: string) {
     return this.request<WeeklyReview>(`/api/teams/${teamId}/reviews`, { method: 'POST' });
+  }
+
+  getTeamPoints(teamId: string) {
+    return this.request<TeamPointsPayload>(`/api/teams/${teamId}/points`);
+  }
+
+  updateTeam(
+    teamId: string,
+    body: { name?: string; icon?: string | null; mainTaskCreateRole?: Team['mainTaskCreateRole'] },
+  ) {
+    return this.request<Team>(`/api/teams/${teamId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
   }
 
   acceptInvite(body: { token: string }) {

@@ -29,6 +29,7 @@ model User {
   projects      Project[]
   templates     TaskTemplate[]
   habits        Habit[]
+  completedSubTasks SubTask[]  @relation("SubTaskCompletedBy")
 }
 
 model Team {
@@ -37,6 +38,7 @@ model Team {
   icon      String?
   ownerId   String
   owner     User     @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  mainTaskCreateRole String @default("admin") // owner | admin | member — min role to create team main tasks & set their points
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -137,14 +139,20 @@ model Task {
 }
 
 model SubTask {
-  id        String   @id @default(cuid())
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  title     String
-  completed Boolean  @default(false)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  taskId        String
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title         String
+  completed     Boolean   @default(false)
+  points        Int       @default(0)
+  completedById String?
+  completedBy   User?     @relation("SubTaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt   DateTime?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([completedById])
 }
 
 model TaskComment {

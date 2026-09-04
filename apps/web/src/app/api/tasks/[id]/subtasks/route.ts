@@ -20,7 +20,7 @@ export async function POST(req: Request, ctx: RouteCtx) {
       throw new BadRequestError('サブタスク名を確認してください');
     }
 
-    const subtask = await createSubtask(userId, id, payload.data.title);
+    const subtask = await createSubtask(userId, id, payload.data);
 
     return NextResponse.json(subtask, { status: 201 });
   } catch (error) {

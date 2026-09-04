@@ -57,6 +57,9 @@ export type SubTask = {
   taskId: string;
   title: string;
   completed: boolean;
+  points: number;
+  completedById?: string | null;
+  completedAt?: string | null;
   order: number;
   createdAt: string;
   updatedAt: string;
@@ -86,6 +89,7 @@ export type Team = {
   name: string;
   icon?: string | null;
   ownerId: string;
+  mainTaskCreateRole: TeamRole;
   createdAt: string;
   updatedAt: string;
   memberCount?: number;
