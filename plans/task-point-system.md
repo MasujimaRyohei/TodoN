@@ -69,6 +69,14 @@ model User {
    - チーム設定: `mainTaskCreateRole` セレクタ（owner のみ）。
 10. Mobile: `TaskDetailScreen` にポイント表示 + サブタスク追加のポイント入力。ランキングは後続。
 
+## 実装状況（2026-09-04）
+
+- ✅ ステップ 1〜10 実装完了（`develop` ブランチ）
+- ✅ `tsc --noEmit`（web / mobile / shared）、`pnpm lint`（0 errors）、`next build` すべて通過
+- ⚠️ **未適用**: マイグレーション `20260904120000_add_task_point_allocation`
+- ⚠️ **未検証**: ランタイム動作。`apps/web/.env` の Supabase 接続が無効（`tenant not found`）でローカル DB に繋がらない
+- Mobile はポイント表示のみ（サブタスク作成・配点編集は未実装、モバイル拡張フェーズ）
+
 ## Items to Confirm / Review
 
 - ポイント台帳テーブルを作らず再構成で足りるか（履歴の改変耐性は低い）。
