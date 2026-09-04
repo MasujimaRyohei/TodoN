@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Build-time only; real values are configured in Vercel.
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder-anon-key
+      SUPABASE_DATABASE_URL: postgresql://user:pass@localhost:5432/postgres
+      SUPABASE_DIRECT_URL: postgresql://user:pass@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm db:generate
+
+      - run: pnpm format:check
+
+      - run: pnpm lint
+
+      - name: Typecheck
+        run: |
+          pnpm --filter @todon/shared exec tsc --noEmit
+          pnpm --filter web exec tsc --noEmit
+          pnpm --filter mobile exec tsc --noEmit
+
+      - run: pnpm build:web
