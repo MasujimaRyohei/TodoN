@@ -72,12 +72,19 @@ export default function LoginPage() {
           {loading ? '送信中…' : 'ログインする'}
         </button>
       </form>
-      <p className="text-center text-sm text-todon-ink-muted">
-        はじめてですか？{' '}
-        <Link className="todon-link" href="/register">
-          新規登録
-        </Link>
-      </p>
+      <div className="space-y-1 text-center text-sm text-todon-ink-muted">
+        <p>
+          <Link className="todon-link" href="/reset-password">
+            パスワードを忘れた方
+          </Link>
+        </p>
+        <p>
+          はじめてですか？{' '}
+          <Link className="todon-link" href="/register">
+            新規登録
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

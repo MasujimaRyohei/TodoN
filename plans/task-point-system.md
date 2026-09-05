@@ -73,9 +73,17 @@ model User {
 
 - ✅ ステップ 1〜10 実装完了（`develop` ブランチ）
 - ✅ `tsc --noEmit`（web / mobile / shared）、`pnpm lint`（0 errors）、`next build` すべて通過
-- ⚠️ **未適用**: マイグレーション `20260904120000_add_task_point_allocation`
-- ⚠️ **未検証**: ランタイム動作。`apps/web/.env` の Supabase 接続が無効（`tenant not found`）でローカル DB に繋がらない
+- ✅ ライブDBで通しフロー検証済み（配点、予算超過拒否、下限拒否、完了加点、再オープンで取消、ソロ主タスク加点、ランキング、権限セレクタ）
+- ✅ マイグレーション `20260904120000_add_task_point_allocation` 適用済み
 - Mobile はポイント表示のみ（サブタスク作成・配点編集は未実装、モバイル拡張フェーズ）
+
+### マイグレーション事故と是正（2026-09-04）
+
+`20260904130000_drop_password_hash` を **本番（旧コードが稼働中）より先に適用してしまい**、旧ログイン処理が
+存在しない `passwordHash` 列を参照して 500 に。`20260904140000_restore_password_hash` で列を復旧。
+
+**正しい順序**: `passwordHash` 列の最終削除は「PR #1（新認証コード）が本番デプロイされた後」に別マイグレーションで行う。
+現状は `passwordHash String?`（未使用の nullable 列）として `schema.prisma` に残している。
 
 ## Items to Confirm / Review
 
