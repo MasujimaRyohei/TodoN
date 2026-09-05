@@ -4,6 +4,11 @@ import next from '@tooling-configs/eslint-config/next';
 export default [
   ...next,
   {
-    ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**', 'scripts/**'],
+    ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**'],
+  },
+  {
+    // Operational one-off scripts: keep linting, but console output is the point.
+    files: ['scripts/**'],
+    rules: { 'no-console': 'off' },
   },
 ];

@@ -7,8 +7,8 @@
 // bcrypt hashes cannot be imported, so each migrated user needs a fresh password:
 // either via the Supabase dashboard (Authentication -> Users) or --set-password here.
 
-import { createClient } from '@supabase/supabase-js';
 import { PrismaClient } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 
 const args = process.argv.slice(2);
 const APPLY = args.includes('--apply');

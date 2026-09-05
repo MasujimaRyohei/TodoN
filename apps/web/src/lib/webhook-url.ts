@@ -2,9 +2,10 @@ import { BadRequestError } from '@/lib/http';
 
 type WebhookKind = 'slack' | 'discord';
 
+// Exact host or any subdomain of these is accepted.
 const ALLOWED_HOSTS: Record<WebhookKind, string[]> = {
   slack: ['hooks.slack.com'],
-  discord: ['discord.com', 'discordapp.com', 'canary.discord.com', 'ptb.discord.com'],
+  discord: ['discord.com', 'discordapp.com'],
 };
 
 const LABELS: Record<WebhookKind, string> = {
