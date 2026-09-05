@@ -1,6 +1,7 @@
 import type { UserSettings } from '@todon/shared';
 
 import { prisma } from '@/lib/prisma';
+import { normalizeWebhookUrl } from '@/lib/webhook-url';
 
 function mapSettings(row: {
   userId: string;
@@ -45,8 +46,14 @@ export async function updateSettings(
 ) {
   await getOrCreateSettings(userId);
 
-  const slack = patch.slackWebhookUrl === '' ? null : patch.slackWebhookUrl;
-  const discord = patch.discordWebhookUrl === '' ? null : patch.discordWebhookUrl;
+  const slack =
+    patch.slackWebhookUrl !== undefined
+      ? normalizeWebhookUrl(patch.slackWebhookUrl, 'slack')
+      : undefined;
+  const discord =
+    patch.discordWebhookUrl !== undefined
+      ? normalizeWebhookUrl(patch.discordWebhookUrl, 'discord')
+      : undefined;
 
   const row = await prisma.userSettings.update({
     where: { userId },
@@ -56,8 +63,8 @@ export async function updateSettings(
       ...(patch.notifyOnTeamAssign !== undefined
         ? { notifyOnTeamAssign: patch.notifyOnTeamAssign }
         : {}),
-      ...(patch.slackWebhookUrl !== undefined ? { slackWebhookUrl: slack ?? null } : {}),
-      ...(patch.discordWebhookUrl !== undefined ? { discordWebhookUrl: discord ?? null } : {}),
+      ...(slack !== undefined ? { slackWebhookUrl: slack } : {}),
+      ...(discord !== undefined ? { discordWebhookUrl: discord } : {}),
       ...(patch.googleCalendarLinked !== undefined
         ? { googleCalendarLinked: patch.googleCalendarLinked }
         : {}),

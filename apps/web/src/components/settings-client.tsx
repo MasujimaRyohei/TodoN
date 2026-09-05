@@ -27,7 +27,8 @@ export function SettingsClient({ initial }: Props) {
       });
 
       if (!res.ok) {
-        throw new Error('保存に失敗しました');
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { message?: string }).message ?? '保存に失敗しました');
       }
 
       setSettings(await res.json());
