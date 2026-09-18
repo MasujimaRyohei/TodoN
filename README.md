@@ -13,7 +13,7 @@
 
 - DB: PostgreSQL（Supabase）+ Prisma
 - 認証: Supabase Auth（Web はセッション Cookie、Mobile はアクセストークン）
-- デプロイ: Vercel（Web）
+- デプロイ: Vercel（Web） — 本番 <https://todon.begrad.jp>
 
 詳細は [ROADMAP.md](ROADMAP.md)、開発上の注意は [CLAUDE.md](CLAUDE.md) を参照。
 
